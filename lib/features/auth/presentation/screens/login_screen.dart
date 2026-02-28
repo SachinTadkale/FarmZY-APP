@@ -313,8 +313,11 @@ class _LoginScreenState extends State<LoginScreen>
                           mainAxisAlignment:
                               MainAxisAlignment.spaceBetween,
                           children: [
-                            Text("00:30 sec",
-                                style: theme.textTheme.bodySmall),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 7.0),
+                              child: Text("00:30 sec",
+                                  style: theme.textTheme.bodySmall),
+                            ),
                             TextButton(
                               onPressed: () {},
                               child: Text(
