@@ -4,14 +4,19 @@ import 'package:farmzy/features/auth/presentation/screens/otp_verification_scree
 import 'package:farmzy/features/auth/presentation/screens/register_flow_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:farmzy/features/home/presentation/screens/home_screen.dart';
+import 'package:farmzy/features/marketplace/presentation/screens/marketplace_screen.dart';
+import 'package:farmzy/features/orders/presentation/screens/orders_screen.dart';
+import 'package:farmzy/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farmzy/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/login_screen.dart';
 import 'package:farmzy/features/auth/providers/auth_provider.dart';
+import 'package:farmzy/shared/layouts/main_layout.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final isLoggedIn = ref.watch(authProvider);
+  // final isLoggedIn = ref.watch(authProvider);
+  final isLoggedIn = true;
 
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -68,11 +73,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ResetPasswordScreen(),
       ),
 
-      /// Home (add your HomeScreen here)
-      GoRoute(
-        path: RouteNames.home,
-        builder: (context, state) => const HomeScreen(),
+      ShellRoute(
+        builder: (context, state, child) {
+          return MainLayout(child: child);
+        },
+        routes: [
+          GoRoute(
+            path: RouteNames.home,
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.marketplace,
+            builder: (context, state) => const MarketplaceScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.orders,
+            builder: (context, state) => const OrdersScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.profile,
+            builder: (context, state) => const ProfileScreen(),
+          ),
+        ],
       ),
+
+      /// Home (add your HomeScreen here)
     ],
   );
 });
