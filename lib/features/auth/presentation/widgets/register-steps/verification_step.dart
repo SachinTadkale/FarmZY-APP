@@ -106,7 +106,7 @@ class _VerificationStepState
 
             /// ID TYPE
             DropdownButtonFormField<String>(
-              value: selectedIdType,
+              initialValue: selectedIdType,
               isExpanded: true,
               dropdownColor: surface,
               borderRadius:

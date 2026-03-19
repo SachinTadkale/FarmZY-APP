@@ -165,7 +165,7 @@ class _BasicDetailsStepState
 
         /// 🔹 Gender Dropdown
         DropdownButtonFormField<String>(
-          value: selectedGender,
+          initialValue: selectedGender,
           decoration: InputDecoration(
             hintText: "Select Gender",
             prefixIcon:

@@ -15,8 +15,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // final isLoggedIn = ref.watch(authProvider);
-  final isLoggedIn = true;
+  final isLoggedIn = ref.watch(authProvider);
 
   return GoRouter(
     initialLocation: RouteNames.splash,
@@ -96,8 +95,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-
-      /// Home (add your HomeScreen here)
     ],
   );
 });

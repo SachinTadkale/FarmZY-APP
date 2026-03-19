@@ -38,7 +38,7 @@ class AppTheme {
 
     colorScheme: const ColorScheme.light(
       primary: AppColors.lightPrimary,
-      background: AppColors.lightBackground,
+      surface: AppColors.lightBackground,
     ),
   );
 
@@ -82,7 +82,7 @@ class AppTheme {
 
     colorScheme: const ColorScheme.dark(
       primary: AppColors.darkPrimary,
-      background: AppColors.darkBackground,
+      surface: AppColors.darkBackground,
     ),
   );
 }

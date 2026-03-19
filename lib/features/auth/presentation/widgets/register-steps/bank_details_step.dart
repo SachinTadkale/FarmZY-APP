@@ -1,4 +1,3 @@
-import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

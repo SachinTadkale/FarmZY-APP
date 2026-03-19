@@ -90,8 +90,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     setState(() {});
   }
 
-  void _onKeyPress(RawKeyEvent event, int index) {
-    if (event.logicalKey == LogicalKeyboardKey.backspace &&
+  void _onKeyPress(KeyEvent event, int index) {
+    if (event is KeyDownEvent &&
+        event.logicalKey == LogicalKeyboardKey.backspace &&
         _controllers[index].text.isEmpty &&
         index > 0) {
       _focusNodes[index - 1].requestFocus();
@@ -141,10 +142,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                       mainAxisAlignment:
                           MainAxisAlignment.spaceEvenly,
                       children: List.generate(4, (index) {
-                        return RawKeyboardListener(
-                          focusNode: FocusNode(),
-                          onKey: (event) =>
-                              _onKeyPress(event, index),
+                        return Focus(
+                          onKeyEvent: (_, event) {
+                            _onKeyPress(event, index);
+                            return KeyEventResult.ignored;
+                          },
                           child: SizedBox(
                             width: 65,
                             child: TextField(
@@ -196,7 +198,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                           child: ElevatedButton(
                             onPressed: isOtpComplete
                                 ? () {
-                                    print("OTP: $otpCode");
+                                    debugPrint("OTP: $otpCode");
 
                                     context.push(
                                         RouteNames.resetPassword);

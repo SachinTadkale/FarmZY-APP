@@ -1,4 +1,5 @@
 import 'package:farmzy/core/constants/route_names.dart';
+import 'package:farmzy/shared/widgets/app_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,15 +22,30 @@ class _MainLayoutState extends State<MainLayout> {
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: colors.background,
+        backgroundColor: colors.surface,
+
+        /// AppBar with Drawer Button
+        appBar: AppBar(
+          backgroundColor: colors.surface,
+          elevation: 0,
+          centerTitle: true,
+          title: const Text("FarmZY"),
+          iconTheme: IconThemeData(color: colors.onSurface),
+        ),
+
+        /// Drawer
+        drawer: AppDrawer(),
+
+        /// Page Content
         body: widget.child,
-      
+
+        /// Bottom Navigation
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: colors.surface,
             border: Border(
               top: BorderSide(
-                color: colors.outline.withOpacity(0.2),
+                color: colors.outline.withValues(alpha: 0.2),
               ),
             ),
           ),
@@ -38,13 +54,13 @@ class _MainLayoutState extends State<MainLayout> {
             type: BottomNavigationBarType.fixed,
             backgroundColor: colors.surface,
             elevation: 0,
-      
+
             selectedItemColor: colors.primary,
-            unselectedItemColor: colors.onSurface.withOpacity(0.6),
-      
+            unselectedItemColor: colors.onSurface.withValues(alpha: 0.6),
+
             onTap: (index) {
               setState(() => currentIndex = index);
-      
+
               switch (index) {
                 case 0:
                   context.go(RouteNames.home);
@@ -60,7 +76,7 @@ class _MainLayoutState extends State<MainLayout> {
                   break;
               }
             },
-      
+
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
