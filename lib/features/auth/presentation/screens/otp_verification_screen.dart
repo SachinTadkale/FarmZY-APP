@@ -1,27 +1,34 @@
 import 'package:farmzy/core/constants/route_names.dart';
+import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class OtpVerificationScreen extends StatefulWidget {
-  const OtpVerificationScreen({super.key});
+class OtpVerificationScreen extends ConsumerStatefulWidget {
+  final String email;
+
+  const OtpVerificationScreen({super.key, required this.email});
 
   @override
-  State<OtpVerificationScreen> createState() =>
+  ConsumerState<OtpVerificationScreen> createState() =>
       _OtpVerificationScreenState();
 }
 
-class _OtpVerificationScreenState extends State<OtpVerificationScreen>
+class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
     with SingleTickerProviderStateMixin {
+  static const int _otpLength = 6;
+
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
   final List<TextEditingController> _controllers =
-      List.generate(4, (_) => TextEditingController());
+      List.generate(_otpLength, (_) => TextEditingController());
 
   final List<FocusNode> _focusNodes =
-      List.generate(4, (_) => FocusNode());
+      List.generate(_otpLength, (_) => FocusNode());
 
   bool _isPressed = false;
 
@@ -63,13 +70,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   String get otpCode =>
       _controllers.map((c) => c.text).join();
 
-  bool get isOtpComplete => otpCode.length == 4;
+  bool get isOtpComplete => otpCode.length == _otpLength;
 
   void _onOtpChanged(String value, int index) {
     if (value.length > 1) {
       // Handle paste
       final pasted = value.replaceAll(RegExp(r'\D'), '');
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < _otpLength; i++) {
         if (i < pasted.length) {
           _controllers[i].text = pasted[i];
         }
@@ -80,7 +87,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
     }
 
     if (value.isNotEmpty) {
-      if (index < 3) {
+      if (index < _otpLength - 1) {
         _focusNodes[index + 1].requestFocus();
       } else {
         _focusNodes[index].unfocus();
@@ -103,6 +110,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
+    final authState = ref.watch(authControllerProvider);
+
+    ref.listen(authControllerProvider, (previous, next) {
+      next.whenOrNull(
+        data: (action) {
+          if (action == AuthAction.passwordResetOtpSent) {
+            AppSnackBar.showSuccess(context, 'OTP sent to your email.');
+          }
+        },
+        error: (error, _) {
+          AppSnackBar.showError(
+            context,
+            error.toString().replaceFirst('Exception: ', ''),
+          );
+        },
+      );
+    });
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -119,7 +143,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                     const SizedBox(height: 60),
 
                     Text(
-                      "Verify Your Mobile Number",
+                      "Verify Your Email",
                       style: theme.textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.w700),
                     ),
@@ -127,7 +151,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                     const SizedBox(height: 12),
 
                     Text(
-                      "Enter the 4-digit verification code sent to your mobile number.",
+                      "Enter the 6-digit verification code sent to ${widget.email}.",
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface
@@ -141,14 +165,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                     Row(
                       mainAxisAlignment:
                           MainAxisAlignment.spaceEvenly,
-                      children: List.generate(4, (index) {
+                      children: List.generate(_otpLength, (index) {
                         return Focus(
                           onKeyEvent: (_, event) {
                             _onKeyPress(event, index);
                             return KeyEventResult.ignored;
                           },
                           child: SizedBox(
-                            width: 65,
+                            width: 48,
                             child: TextField(
                               controller: _controllers[index],
                               focusNode: _focusNodes[index],
@@ -198,10 +222,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                           child: ElevatedButton(
                             onPressed: isOtpComplete
                                 ? () {
-                                    debugPrint("OTP: $otpCode");
-
-                                    context.push(
-                                        RouteNames.resetPassword);
+                                    context.go(
+                                      RouteNames.resetPassword,
+                                      extra: {
+                                        'email': widget.email,
+                                        'otp': otpCode,
+                                      },
+                                    );
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
@@ -217,7 +244,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen>
                     const SizedBox(height: 20),
 
                     TextButton(
-                      onPressed: () {},
+                      onPressed: authState.isLoading
+                          ? null
+                          : () {
+                              ref
+                                  .read(authControllerProvider.notifier)
+                                  .forgotPassword(widget.email);
+                            },
                       child: Text(
                         "Resend OTP",
                         style: TextStyle(
