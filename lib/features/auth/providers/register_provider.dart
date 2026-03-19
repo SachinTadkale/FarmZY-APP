@@ -14,6 +14,7 @@ class RegisterState {
   final String stateName;
   final String district;
   final String village;
+  final String pincode;
   final String landArea;
   final String farmType;
 
@@ -36,6 +37,7 @@ class RegisterState {
     this.stateName = '',
     this.district = '',
     this.village = '',
+    this.pincode = '',
     this.landArea = '',
     this.farmType = '',
     this.accountHolder = '',
@@ -74,6 +76,7 @@ class RegisterState {
       stateName: stateName ?? this.stateName,
       district: district ?? this.district,
       village: village ?? this.village,
+      pincode: pincode ?? this.pincode,
       landArea: landArea ?? this.landArea,
       farmType: farmType ?? this.farmType,
       accountHolder: accountHolder ?? this.accountHolder,
@@ -114,6 +117,24 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
       email: email,
       password: password,
       gender: gender,
+    );
+  }
+
+  void updateFarmDetails({
+    String? stateName,
+    String? district,
+    String? village,
+    String? pincode,
+    String? landArea,
+    String? farmType,
+  }) {
+    state = state.copyWith(
+      stateName: stateName,
+      district: district,
+      village: village,
+      pincode: pincode,
+      landArea: landArea,
+      farmType: farmType,
     );
   }
 

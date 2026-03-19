@@ -12,7 +12,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends State<HomeScreen>  
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
     );
 
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
@@ -40,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return AppScaffold(
       body: FadeTransition(
@@ -50,36 +49,28 @@ class _HomeScreenState extends State<HomeScreen>
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              /// HEADER
-              _header(theme),
+              const SizedBox(height: 8),
 
-              const SizedBox(height: 20),
-
-              /// SEARCH
               _searchBar(theme),
 
               const SizedBox(height: 20),
 
-              /// WEATHER
               _weatherCard(theme),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               _marketPrices(theme),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              /// SELL CTA
               _sellCropCTA(theme),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              /// QUICK ACTIONS
               _quickActions(theme),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
 
-              /// RECENT ACTIVITY
               _recentActivity(theme),
             ],
           ),
@@ -89,60 +80,23 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _handleActivityTap(Activity activity) {
-  switch (activity.type) {
-
-    case ActivityType.companyRequest:
-      context.push("/requests/${activity.referenceId}");
-      break;
-
-    case ActivityType.orderPicked:
-      context.push("/orders/${activity.referenceId}");
-      break;
-
-    case ActivityType.paymentReceived:
-      context.push("/wallet/${activity.referenceId}");
-      break;
-
-    case ActivityType.deliveryCompleted:
-      context.push("/delivery/${activity.referenceId}");
-      break;
-
-    case ActivityType.cropApproved:
-      context.push("/crops/${activity.referenceId}");
-      break;
-  }
-}
-  /// HEADER
-
-  Widget _header(ThemeData theme) {
-    return Row(
-      children: [
-        const CircleAvatar(
-          radius: 22,
-          backgroundImage: AssetImage("assets/avatar.png"),
-        ),
-
-        const SizedBox(width: 12),
-
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Hi, Maruti 👋",
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
-              Text("Farmer • Maharashtra", style: theme.textTheme.bodySmall),
-            ],
-          ),
-        ),
-
-        IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
-      ],
-    );
+    switch (activity.type) {
+      case ActivityType.companyRequest:
+        context.push("/requests/${activity.referenceId}");
+        break;
+      case ActivityType.orderPicked:
+        context.push("/orders/${activity.referenceId}");
+        break;
+      case ActivityType.paymentReceived:
+        context.push("/wallet/${activity.referenceId}");
+        break;
+      case ActivityType.deliveryCompleted:
+        context.push("/delivery/${activity.referenceId}");
+        break;
+      case ActivityType.cropApproved:
+        context.push("/crops/${activity.referenceId}");
+        break;
+    }
   }
 
   /// SEARCH BAR
@@ -150,17 +104,21 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _searchBar(ThemeData theme) {
     final colors = theme.colorScheme;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          icon: Icon(Icons.search, color: colors.primary),
-          hintText: "Search crops, companies...",
-          border: InputBorder.none,
+    return TextField(
+      decoration: InputDecoration(
+        hintText: "Search crops, companies...",
+        prefixIcon: Icon(Icons.search, color: colors.primary),
+        filled: true,
+        fillColor: colors.surface,
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colors.outline.withValues(alpha: .2)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: colors.primary),
         ),
       ),
     );
@@ -179,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
       child: Row(
         children: [
-          Icon(Icons.wb_cloudy, size: 30, color: colors.primary),
+          Icon(Icons.wb_cloudy, size: 28, color: colors.primary),
 
           const SizedBox(width: 12),
 
@@ -193,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// Market Price
+  /// MARKET PRICES
 
   Widget _marketPrices(ThemeData theme) {
     final data = [
@@ -206,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Market Prices", style: theme.textTheme.titleMedium),
+
         const SizedBox(height: 12),
 
         Container(
@@ -216,32 +175,12 @@ class _HomeScreenState extends State<HomeScreen>
           ),
           child: Column(
             children: [
-              /// HEADER
               Row(
                 children: [
-                  const Expanded(
-                    flex: 3,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text("Crop"),
-                    ),
-                  ),
-                  const Expanded(
-                    flex: 2,
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text("Current"),
-                    ),
-                  ),
-                  const Expanded(
-                    flex: 2,
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Text("Previous"),
-                    ),
-                  ),
-                  const Expanded(
-                    flex: 2,
+                  Expanded(child: Text("Crop")),
+                  Expanded(child: Center(child: Text("Current"))),
+                  Expanded(child: Center(child: Text("Previous"))),
+                  Expanded(
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: Text("Change"),
@@ -250,10 +189,8 @@ class _HomeScreenState extends State<HomeScreen>
                 ],
               ),
 
-              const SizedBox(height: 8),
               const Divider(),
 
-              /// ROWS
               ...data.map((item) {
                 double today = (item["today"] as num).toDouble();
                 double yesterday = (item["yesterday"] as num).toDouble();
@@ -270,36 +207,12 @@ class _HomeScreenState extends State<HomeScreen>
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Row(
                     children: [
-                      /// Crop
+                      Expanded(child: Text(item["crop"] as String)),
+                      Expanded(child: Center(child: Text("₹${today.toInt()}"))),
                       Expanded(
-                        flex: 3,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(item["crop"] as String),
-                        ),
+                        child: Center(child: Text("₹${yesterday.toInt()}")),
                       ),
-
-                      /// Current
                       Expanded(
-                        flex: 2,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text("₹${today.toInt()}"),
-                        ),
-                      ),
-
-                      /// Previous
-                      Expanded(
-                        flex: 2,
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: Text("₹${yesterday.toInt()}"),
-                        ),
-                      ),
-
-                      /// Change
-                      Expanded(
-                        flex: 2,
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Text(
@@ -322,41 +235,41 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// SELL CROP BUTTON
+  /// SELL CROP CTA
 
   Widget _sellCropCTA(ThemeData theme) {
     final colors = theme.colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Material(
-        color: colors.primary,
+    return Material(
+      color: colors.primary,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {},
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-            child: Row(
-              children: [
-                const Icon(Icons.storefront, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    "Sell Your Crop",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
+        onTap: () {},
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+          child: Row(
+            children: [
+              const Icon(Icons.storefront, color: Colors.white),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Text(
+                  "Sell Your Crop",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ],
-            ),
+              ),
+
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+            ],
           ),
         ),
       ),
@@ -384,21 +297,23 @@ class _HomeScreenState extends State<HomeScreen>
         Row(
           children: actions.map((e) {
             return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Icon(e["icon"] as IconData, color: colors.primary),
-
-                    const SizedBox(height: 8),
-
-                    Text(e["title"] as String),
-                  ],
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: () {},
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(e["icon"] as IconData, color: colors.primary),
+                      const SizedBox(height: 8),
+                      Text(e["title"] as String),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -437,24 +352,20 @@ class _HomeScreenState extends State<HomeScreen>
         const SizedBox(height: 12),
 
         ...activities.map((activity) {
-          /// Get icon & color automatically
           final icon = ActivityUIMapper.getIcon(activity.type);
           final color = ActivityUIMapper.getColor(activity.type);
 
           return InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              _handleActivityTap(activity);
-            },
+            onTap: () => _handleActivityTap(activity),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  /// ICON
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: .15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: color, size: 20),
@@ -462,15 +373,8 @@ class _HomeScreenState extends State<HomeScreen>
 
                   const SizedBox(width: 12),
 
-                  /// TEXT
-                  Expanded(
-                    child: Text(
-                      activity.title,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
+                  Expanded(child: Text(activity.title)),
 
-                  /// ARROW
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 14,
@@ -480,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

@@ -61,10 +61,9 @@ class _FarmDetailsStepState
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          onChanged: (val) =>
-              ref.read(registerProvider.notifier).state =
-                  ref.read(registerProvider)
-                      .copyWith(stateName: val),
+          onChanged: (val) => ref
+              .read(registerProvider.notifier)
+              .updateFarmDetails(stateName: val),
         ),
 
         const SizedBox(height: 20),
@@ -84,10 +83,9 @@ class _FarmDetailsStepState
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          onChanged: (val) =>
-              ref.read(registerProvider.notifier).state =
-                  ref.read(registerProvider)
-                      .copyWith(district: val),
+          onChanged: (val) => ref
+              .read(registerProvider.notifier)
+              .updateFarmDetails(district: val),
         ),
 
         const SizedBox(height: 20),
@@ -106,10 +104,9 @@ class _FarmDetailsStepState
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          onChanged: (val) =>
-              ref.read(registerProvider.notifier).state =
-                  ref.read(registerProvider)
-                      .copyWith(village: val),
+          onChanged: (val) => ref
+              .read(registerProvider.notifier)
+              .updateFarmDetails(village: val),
         ),
 
         const SizedBox(height: 20),
@@ -130,10 +127,9 @@ class _FarmDetailsStepState
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          onChanged: (val) =>
-              ref.read(registerProvider.notifier).state =
-                  ref.read(registerProvider)
-                      .copyWith(pincode: val),
+          onChanged: (val) => ref
+              .read(registerProvider.notifier)
+              .updateFarmDetails(pincode: val),
         ),
 
         const SizedBox(height: 20),
@@ -158,10 +154,9 @@ class _FarmDetailsStepState
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          onChanged: (val) =>
-              ref.read(registerProvider.notifier).state =
-                  ref.read(registerProvider)
-                      .copyWith(landArea: val),
+          onChanged: (val) => ref
+              .read(registerProvider.notifier)
+              .updateFarmDetails(landArea: val),
         ),
       ],
     );
