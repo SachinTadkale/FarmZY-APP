@@ -10,17 +10,24 @@ import 'package:farmzy/features/profile/presentation/screens/profile_screen.dart
 import 'package:farmzy/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/login_screen.dart';
 import 'package:farmzy/features/auth/providers/auth_provider.dart';
+import 'package:flutter/foundation.dart';
 import 'package:farmzy/shared/layouts/main_layout.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final isLoggedIn = ref.watch(authProvider);
+  final authNotifier = ValueNotifier<bool>(ref.read(authProvider));
+  ref.onDispose(authNotifier.dispose);
+  ref.listen<bool>(authProvider, (_, next) {
+    authNotifier.value = next;
+  });
 
   return GoRouter(
     initialLocation: RouteNames.splash,
+    refreshListenable: authNotifier,
 
     redirect: (context, state) {
+      final isLoggedIn = authNotifier.value;
       final isGoingToLogin = state.fullPath == RouteNames.login;
       final isGoingToRegister = state.fullPath == RouteNames.register;
 
@@ -65,11 +72,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.otpVerification,
-        builder: (context, state) => const OtpVerificationScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return OtpVerificationScreen(
+            email: (extra?['email'] ?? '').toString(),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.resetPassword,
-        builder: (context, state) => const ResetPasswordScreen(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ResetPasswordScreen(
+            email: (extra?['email'] ?? '').toString(),
+            otp: (extra?['otp'] ?? '').toString(),
+          );
+        },
       ),
 
       ShellRoute(

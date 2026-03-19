@@ -1,18 +1,21 @@
 import 'package:farmzy/core/constants/route_names.dart';
+import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
 
   @override
-  State<ForgotPasswordScreen> createState() =>
+  ConsumerState<ForgotPasswordScreen> createState() =>
       _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     with SingleTickerProviderStateMixin {
-  final _mobileController = TextEditingController();
+  final _emailController = TextEditingController();
   final _focusNode = FocusNode();
 
   late AnimationController _controller;
@@ -51,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   @override
   void dispose() {
     _controller.dispose();
-    _mobileController.dispose();
+    _emailController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -61,6 +64,30 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
     final surface = theme.colorScheme.surface;
+    final authState = ref.watch(authControllerProvider);
+
+    ref.listen(authControllerProvider, (previous, next) {
+      next.whenOrNull(
+        data: (action) {
+          if (action == AuthAction.passwordResetOtpSent) {
+            AppSnackBar.showSuccess(
+              context,
+              'Verification code sent to your email.',
+            );
+            context.go(
+              RouteNames.otpVerification,
+              extra: {'email': _emailController.text.trim()},
+            );
+          }
+        },
+        error: (error, _) {
+          AppSnackBar.showError(
+            context,
+            error.toString().replaceFirst('Exception: ', ''),
+          );
+        },
+      );
+    });
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -89,7 +116,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
                     /// Clear Description
                     Text(
-                      "Enter your registered mobile number to receive a verification OTP.",
+                      "Enter your registered email address to receive a verification OTP.",
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurface
@@ -99,7 +126,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
                     const SizedBox(height: 36),
 
-                    /// Phone Field with Glow
+                    /// Email Field with Glow
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       decoration: BoxDecoration(
@@ -114,14 +141,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                             : [],
                       ),
                       child: TextField(
-                        controller: _mobileController,
+                        controller: _emailController,
                         focusNode: _focusNode,
-                        keyboardType: TextInputType.phone,
+                        keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
-                          hintText: "Registered Mobile Number",
-                          prefixIcon:
-                              Icon(Icons.phone, color: primary),
+                          hintText: "Registered Email Address",
+                          prefixIcon: Icon(Icons.email_outlined, color: primary),
                           filled: true,
                           fillColor: surface,
                           border: OutlineInputBorder(
@@ -150,15 +176,34 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
                           width: double.infinity,
                           height: 52,
                           child: ElevatedButton(
-                            onPressed: () {
-                              context.push(
-                                  RouteNames.otpVerification);
-                            },
+                            onPressed: authState.isLoading
+                                ? null
+                                : () {
+                                    if (_emailController.text.trim().isEmpty) {
+                                      AppSnackBar.showError(
+                                        context,
+                                        'Please enter your email.',
+                                      );
+                                      return;
+                                    }
+
+                                    ref
+                                        .read(authControllerProvider.notifier)
+                                        .forgotPassword(_emailController.text.trim());
+                                  },
+                            child: authState.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text("Send Verification OTP"),
                             style: ElevatedButton.styleFrom(
                               shape: const StadiumBorder(),
                             ),
-                            child:
-                                const Text("Send Verification OTP"),
                           ),
                         ),
                       ),

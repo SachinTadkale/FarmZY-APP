@@ -1,6 +1,11 @@
+import 'package:farmzy/core/constants/route_names.dart';
+import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key});
 
   static const List<_DrawerItemData> _items = [
@@ -16,7 +21,7 @@ class AppDrawer extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -69,7 +74,14 @@ class AppDrawer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(14),
-                    onTap: () {},
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await ref.read(authControllerProvider.notifier).logout();
+
+                      if (!context.mounted) return;
+                      AppSnackBar.showSuccess(context, "Logged out successfully.");
+                      context.go(RouteNames.login);
+                    },
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,

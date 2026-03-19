@@ -4,7 +4,9 @@ import 'package:farmzy/features/auth/presentation/widgets/register-steps/basic_d
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/farm_details_step.dart';
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/under_review_step.dart';
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/verification_step.dart';
+import 'package:farmzy/features/auth/providers/register_flow_controller.dart';
 import 'package:farmzy/features/auth/providers/register_provider.dart';
+import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,6 +20,13 @@ class RegisterFlowScreen extends ConsumerStatefulWidget {
 
 class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
     with SingleTickerProviderStateMixin {
+  static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final RegExp _phoneRegex = RegExp(r'^\d{10}$');
+  static final RegExp _aadhaarRegex = RegExp(r'^\d{12}$');
+  static final RegExp _panRegex = RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$');
+  static final RegExp _passwordRegex =
+      RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$');
+
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -71,14 +80,68 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
     }
   }
 
+  bool _isCurrentStepValid(RegisterState state) {
+    switch (state.currentStep) {
+      case 0:
+        return state.name.trim().isNotEmpty &&
+            _emailRegex.hasMatch(state.email.trim()) &&
+            _phoneRegex.hasMatch(state.phone.trim()) &&
+            state.address.trim().isNotEmpty &&
+            state.gender.trim().isNotEmpty &&
+            _passwordRegex.hasMatch(state.password.trim()) &&
+            state.confirmPassword.trim().isNotEmpty &&
+            state.password.trim() == state.confirmPassword.trim();
+      case 1:
+        return state.stateName.trim().isNotEmpty &&
+            state.district.trim().isNotEmpty &&
+            state.village.trim().isNotEmpty &&
+            RegExp(r'^\d{6}$').hasMatch(state.pincode.trim()) &&
+            double.tryParse(state.landArea.trim()) != null;
+      case 2:
+        return state.accountHolder.trim().isNotEmpty &&
+            state.accountNumber.trim().isNotEmpty &&
+            state.confirmAccountNumber.trim().isNotEmpty &&
+            state.bankName.trim().isNotEmpty &&
+            state.ifsc.trim().isNotEmpty &&
+            state.accountNumber.trim() == state.confirmAccountNumber.trim();
+      case 3:
+        final idNumber = state.idNumber.trim().toUpperCase();
+        final isIdValid =
+            state.idType == 'AADHAR'
+                ? _aadhaarRegex.hasMatch(idNumber)
+                : state.idType == 'PAN'
+                ? _panRegex.hasMatch(idNumber)
+                : false;
+        return state.idType.trim().isNotEmpty &&
+            isIdValid &&
+            state.frontImage != null &&
+            (state.idType != 'AADHAR' || state.backImage != null) &&
+            state.agreeTerms;
+      default:
+        return true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(registerProvider);
     final notifier = ref.read(registerProvider.notifier);
+    final submissionState = ref.watch(registerFlowControllerProvider);
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
 
     final double progress = (state.currentStep + 1) / totalSteps;
+
+    ref.listen(registerFlowControllerProvider, (previous, next) {
+      next.whenOrNull(
+        error: (error, _) {
+          AppSnackBar.showError(
+            context,
+            error.toString().replaceFirst('Exception: ', ''),
+          );
+        },
+      );
+    });
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
@@ -155,7 +218,9 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
                           if (state.currentStep > 0)
                             Expanded(
                               child: OutlinedButton(
-                                onPressed: notifier.previousStep,
+                                onPressed: submissionState.isLoading
+                                    ? null
+                                    : notifier.previousStep,
                                 child: const Text("Back"),
                               ),
                             ),
@@ -164,10 +229,29 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
 
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: notifier.nextStep,
-                              child: Text(
-                                state.currentStep == 3 ? "Submit" : "Next",
-                              ),
+                              onPressed: submissionState.isLoading
+                                      || !_isCurrentStepValid(state)
+                                  ? null
+                                  : () {
+                                      ref
+                                          .read(
+                                            registerFlowControllerProvider
+                                                .notifier,
+                                          )
+                                          .submitCurrentStep();
+                                    },
+                              child: submissionState.isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      state.currentStep == 3 ? "Submit" : "Next",
+                                    ),
                             ),
                           ),
                         ],
@@ -178,6 +262,7 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
+                            ref.read(registerProvider.notifier).reset();
                             context.push(RouteNames.login);
                           },
                           child: const Text("Go to Log In"),
