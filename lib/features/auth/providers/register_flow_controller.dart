@@ -27,6 +27,8 @@ class RegisterFlowController
   );
   static final RegExp _aadhaarRegex = RegExp(r'^\d{12}$');
   static final RegExp _panRegex = RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$');
+  static final RegExp _bankAccountRegex = RegExp(r'^\d{9,18}$');
+  static final RegExp _ifscRegex = RegExp(r'^[A-Z]{4}0[A-Z0-9]{6}$');
 
   final Ref _ref;
   final RegisterFlowRepository _repository;
@@ -149,25 +151,36 @@ class RegisterFlowController
 
   Future<void> _submitBankDetails(RegisterState registerState) async {
     final token = _requireToken(registerState);
+    final normalizedAccountNumber = registerState.accountNumber.trim();
+    final normalizedIfsc = registerState.ifsc.trim().toUpperCase();
+
     if (registerState.accountHolder.trim().isEmpty ||
-        registerState.accountNumber.trim().isEmpty ||
+        normalizedAccountNumber.isEmpty ||
         registerState.bankName.trim().isEmpty ||
-        registerState.ifsc.trim().isEmpty) {
+        normalizedIfsc.isEmpty) {
       throw Exception('Please complete all bank details.');
     }
 
-    if (registerState.accountNumber.trim() !=
+    if (normalizedAccountNumber !=
         registerState.confirmAccountNumber.trim()) {
       throw Exception('Account numbers do not match.');
+    }
+
+    if (!_bankAccountRegex.hasMatch(normalizedAccountNumber)) {
+      throw Exception('Account number must be 9 to 18 digits.');
+    }
+
+    if (!_ifscRegex.hasMatch(normalizedIfsc)) {
+      throw Exception('Please enter a valid IFSC code.');
     }
 
     await _repository.addBank(
       token: token,
       request: BankDetailsRequest(
         accountHolder: registerState.accountHolder.trim(),
-        accountNumber: registerState.accountNumber.trim(),
+        accountNumber: normalizedAccountNumber,
         bankName: registerState.bankName.trim(),
-        ifsc: registerState.ifsc.trim(),
+        ifsc: normalizedIfsc,
       ),
     );
   }
@@ -216,13 +229,20 @@ class RegisterFlowController
 
   void _setErrorState(DioException e, StackTrace stackTrace) {
     final responseData = e.response?.data;
-    final message =
+    final rawMessage =
         responseData is Map<String, dynamic>
             ? ((responseData['message'] ??
                         responseData['error'] ??
                         'Registration step failed.')
                     .toString())
             : (e.message ?? 'Registration step failed.');
+    final message = switch (rawMessage) {
+      'BANK_DETAILS_ENCRYPTION_KEY is not defined' =>
+        'Bank details could not be saved because the server bank-encryption key is missing. Please configure the backend and try again.',
+      String() when rawMessage.contains('BANK_DETAILS_ENCRYPTION_KEY') =>
+        'Bank details could not be saved because bank encryption is not configured correctly on the server.',
+      _ => rawMessage,
+    };
     state = AsyncError(Exception(message), stackTrace);
   }
 }
