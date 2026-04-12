@@ -24,7 +24,36 @@ class ApiClient {
 
   ApiClient(this.dio);
 
+  Future<Response<dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return dio.get(path, queryParameters: queryParameters);
+  }
+
   Future<Response<dynamic>> post(String path, {dynamic data}) async {
     return dio.post(path, data: data);
+  }
+
+  Future<Response<dynamic>> postForm(
+    String path, {
+    required FormData data,
+  }) async {
+    return dio.post(path, data: data);
+  }
+
+  Future<Response<dynamic>> patch(String path, {dynamic data}) async {
+    return dio.patch(path, data: data);
+  }
+
+  Future<Response<dynamic>> patchForm(
+    String path, {
+    required FormData data,
+  }) async {
+    return dio.patch(path, data: data);
+  }
+
+  Future<Response<dynamic>> delete(String path, {dynamic data}) async {
+    return dio.delete(path, data: data);
   }
 }

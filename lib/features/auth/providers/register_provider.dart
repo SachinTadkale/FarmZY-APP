@@ -1,6 +1,4 @@
 import 'dart:io';
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 class RegisterState {
@@ -223,7 +221,8 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
   }
 }
 
-final registerProvider =
-    StateNotifierProvider<RegisterNotifier, RegisterState>((ref) {
-      return RegisterNotifier();
-    });
+final registerProvider = StateNotifierProvider<RegisterNotifier, RegisterState>(
+  (ref) {
+    return RegisterNotifier();
+  },
+);

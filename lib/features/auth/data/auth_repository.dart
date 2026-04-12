@@ -3,7 +3,9 @@ import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:farmzy/features/auth/data/auth_service.dart';
 import 'package:farmzy/features/auth/data/model/login_request.dart';
 import 'package:farmzy/features/auth/data/model/otp_request.dart';
+import 'package:farmzy/features/auth/data/model/register_request.dart';
 import 'package:farmzy/features/auth/data/model/reset_password_request.dart';
+import 'package:farmzy/shared/utils/jwt_parser.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Providers
@@ -33,6 +35,14 @@ class AuthRepository {
     }
 
     await _storage.saveToken(res.token);
+    final payload = JwtParser.parse(res.token);
+    await _storage.saveSession(
+      userId: payload['userId'],
+      role: payload['role'],
+      actorType: payload['actorType'],
+      email: request.email,
+      verificationStatus: 'VERIFIED',
+    );
   }
 
   Future<String> requestOtp(OtpRequest request) async {
@@ -52,6 +62,37 @@ class AuthRepository {
     }
 
     await _storage.saveToken(res.token);
+    final payload = JwtParser.parse(res.token);
+    await _storage.saveSession(
+      userId: payload['userId'],
+      role: payload['role'],
+      actorType: payload['actorType'],
+      email: request.email,
+      verificationStatus: 'VERIFIED',
+    );
+  }
+
+  Future<void> register(RegisterRequest request) async {
+    final res = await _service.register(request);
+
+    if (res.token.isEmpty) {
+      throw Exception(
+        res.message.isNotEmpty
+            ? res.message
+            : 'Registration succeeded but no auth token was returned.',
+      );
+    }
+
+    await _storage.saveToken(res.token);
+    final payload = JwtParser.parse(res.token);
+    await _storage.saveSession(
+      userId: payload['userId'],
+      role: payload['role'],
+      actorType: payload['actorType'],
+      name: request.name,
+      email: request.email,
+      verificationStatus: 'PENDING',
+    );
   }
 
   Future<String> forgotPassword(OtpRequest request) async {

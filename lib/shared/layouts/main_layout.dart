@@ -13,12 +13,17 @@ class MainLayout extends StatefulWidget {
 }
 
 class _MainLayoutState extends State<MainLayout> {
-  int currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final location = GoRouterState.of(context).uri.path;
+    final currentIndex = switch (location) {
+      RouteNames.marketplace => 1,
+      RouteNames.orders => 2,
+      RouteNames.profile => 3,
+      _ => 0,
+    };
 
     return SafeArea(
       child: Scaffold(
@@ -59,8 +64,6 @@ class _MainLayoutState extends State<MainLayout> {
             unselectedItemColor: colors.onSurface.withValues(alpha: 0.6),
 
             onTap: (index) {
-              setState(() => currentIndex = index);
-
               switch (index) {
                 case 0:
                   context.go(RouteNames.home);
