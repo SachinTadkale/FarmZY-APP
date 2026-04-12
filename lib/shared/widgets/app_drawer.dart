@@ -142,7 +142,23 @@ class _DrawerItem extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           splashColor: colors.primary.withValues(alpha: 0.15),
           highlightColor: colors.primary.withValues(alpha: 0.08),
-          onTap: () {},
+          onTap: () {
+            Navigator.pop(context);
+
+            if (title == "See My Crops" || title == "Add New Crop") {
+              context.go(RouteNames.myCrops);
+              return;
+            }
+
+            if (title == "Payment") {
+              context.go(RouteNames.orders);
+              return;
+            }
+
+            if (title == "Settings") {
+              context.go(RouteNames.profile);
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             child: Row(

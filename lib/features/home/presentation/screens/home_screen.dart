@@ -1,3 +1,4 @@
+import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/shared/enums/activity_type.dart';
 import 'package:farmzy/shared/models/activity_model.dart';
 import 'package:farmzy/shared/utils/activity_ui_mapper.dart';
@@ -245,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen>
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () {},
+        onTap: () => context.go(RouteNames.marketplace),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           child: Row(
@@ -282,9 +283,21 @@ class _HomeScreenState extends State<HomeScreen>
     final colors = theme.colorScheme;
 
     final actions = [
-      {"icon": Icons.agriculture, "title": "My Crops"},
-      {"icon": Icons.shopping_cart, "title": "Orders"},
-      {"icon": Icons.account_balance_wallet, "title": "Wallet"},
+      {
+        "icon": Icons.agriculture,
+        "title": "My Crops",
+        "route": RouteNames.myCrops,
+      },
+      {
+        "icon": Icons.shopping_cart,
+        "title": "Orders",
+        "route": RouteNames.orders,
+      },
+      {
+        "icon": Icons.person_outline,
+        "title": "Profile",
+        "route": RouteNames.profile,
+      },
     ];
 
     return Column(
@@ -299,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen>
             return Expanded(
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
-                onTap: () {},
+                onTap: () => context.go(e["route"] as String),
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   padding: const EdgeInsets.symmetric(vertical: 18),
