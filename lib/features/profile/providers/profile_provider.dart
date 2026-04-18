@@ -18,7 +18,7 @@ final profileProvider = FutureProvider<FarmerProfile>((ref) async {
   String verificationStatus = session['verificationStatus'] ?? 'VERIFIED';
 
   try {
-    final response = await api.get('user/dashboard');
+    final response = await api.get('users/dashboard');
     final user = response.data['user'];
     if (user is Map<String, dynamic>) {
       userId = (user['userId'] ?? userId).toString();

@@ -18,12 +18,13 @@ class _MainLayoutState extends State<MainLayout> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final location = GoRouterState.of(context).uri.path;
-    final currentIndex = switch (location) {
-      RouteNames.marketplace => 1,
-      RouteNames.orders => 2,
-      RouteNames.profile => 3,
-      _ => 0,
-    };
+    final currentIndex = location.startsWith(RouteNames.orders)
+        ? 2
+        : switch (location) {
+            RouteNames.marketplace => 1,
+            RouteNames.profile => 3,
+            _ => 0,
+          };
 
     return SafeArea(
       child: Scaffold(

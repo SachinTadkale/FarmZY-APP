@@ -4,6 +4,7 @@ class RouteNames {
   static const marketplace = '/marketplace';
   static const myCrops = '/my-crops';
   static const orders = '/orders';
+  static const orderDetail = '/orders/:id';
   static const profile = '/profile';
   static const register = '/register';
   static const login = '/login';

@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:farmzy/core/network/app_network_error.dart';
 import 'package:farmzy/features/my_crops/data/models/crop_product.dart';
 import 'package:farmzy/features/my_crops/data/my_crops_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,13 +87,7 @@ class CropMutationController extends StateNotifier<AsyncValue<String?>> {
   String? readableError() {
     return state.whenOrNull(
       error: (error, _) {
-        if (error is DioException) {
-          final data = error.response?.data;
-          if (data is Map<String, dynamic> && data['message'] != null) {
-            return data['message'].toString();
-          }
-        }
-        return error.toString();
+        return AppNetworkError.userMessage(error);
       },
     );
   }

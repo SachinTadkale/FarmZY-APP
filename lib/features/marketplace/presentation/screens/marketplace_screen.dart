@@ -3,6 +3,7 @@ import 'package:farmzy/features/marketplace/data/models/marketplace_listing.dart
 import 'package:farmzy/features/marketplace/providers/marketplace_provider.dart';
 import 'package:farmzy/features/my_crops/data/models/crop_product.dart';
 import 'package:farmzy/features/my_crops/providers/my_crops_provider.dart';
+import 'package:farmzy/shared/widgets/app_async_state.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -134,6 +135,9 @@ class MarketplaceScreen extends ConsumerWidget {
                         'No marketplace listings match your current filters.',
                     actionLabel: 'Pricing only',
                     onActionPressed: null,
+                    onRetry: () {
+                      ref.read(marketplaceRefreshProvider.notifier).state++;
+                    },
                   ),
                   _ListingPane(
                     listingsAsync: myListingsAsync,
@@ -142,6 +146,9 @@ class MarketplaceScreen extends ConsumerWidget {
                     actionLabel: 'Manage',
                     onActionPressed: (listing) =>
                         _showManageListingSheet(context, ref, listing),
+                    onRetry: () {
+                      ref.read(marketplaceRefreshProvider.notifier).state++;
+                    },
                   ),
                 ],
               ),
@@ -425,12 +432,14 @@ class _ListingPane extends StatelessWidget {
   final String emptyMessage;
   final String actionLabel;
   final void Function(MarketplaceListing listing)? onActionPressed;
+  final VoidCallback onRetry;
 
   const _ListingPane({
     required this.listingsAsync,
     required this.emptyMessage,
     required this.actionLabel,
     required this.onActionPressed,
+    required this.onRetry,
   });
 
   @override
@@ -534,12 +543,13 @@ class _ListingPane extends StatelessWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(error.toString(), textAlign: TextAlign.center),
-        ),
+      loading: () => const AppLoadingState(
+        message: 'Loading marketplace listings...',
+      ),
+      error: (error, _) => AppErrorState(
+        error: error,
+        title: 'Unable to load listings',
+        onRetry: onRetry,
       ),
     );
   }

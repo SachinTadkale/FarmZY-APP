@@ -21,7 +21,7 @@ class MarketplaceRepository {
     String order = 'desc',
   }) async {
     final response = await _api.get(
-      'marketplace/listings',
+      'marketplace/getListings',
       queryParameters: {
         ...?search != null && search.isNotEmpty ? {'search': search} : null,
         ...?category != null && category.isNotEmpty
@@ -67,7 +67,7 @@ class MarketplaceRepository {
     double longitude = 73.8567,
   }) async {
     final response = await _api.post(
-      'marketplace/listings',
+      'marketplace/addListing',
       data: {
         'productId': productId,
         'price': price,
@@ -91,7 +91,7 @@ class MarketplaceRepository {
     required String status,
   }) async {
     final response = await _api.patch(
-      'marketplace/listings/$listingId',
+      'marketplace/updateListing/$listingId',
       data: {
         'price': price,
         'quantity': quantity,
@@ -105,7 +105,9 @@ class MarketplaceRepository {
   }
 
   Future<String> deleteListing(String listingId) async {
-    final response = await _api.delete('marketplace/listings/$listingId');
+    final response = await _api.delete(
+      'marketplace/deleteListing/$listingId',
+    );
     return (response.data['message'] ?? 'Listing cancelled successfully')
         .toString();
   }
