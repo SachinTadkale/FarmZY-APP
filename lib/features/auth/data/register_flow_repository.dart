@@ -18,7 +18,10 @@ class RegisterFlowRepository {
   RegisterFlowRepository(this._apiClient);
 
   Future<AuthResponse> register(RegisterRequest request) async {
-    final response = await _apiClient.post('auth/register', data: request.toJson());
+    final response = await _apiClient.post(
+      'auth/user/register',
+      data: request.toJson(),
+    );
     return AuthResponse.fromJson(response.data);
   }
 
@@ -28,7 +31,7 @@ class RegisterFlowRepository {
   }) async {
     // Use the onboarding token from registration without logging the user in yet.
     await _apiClient.dio.post(
-      'farm/',
+      'farms/',
       data: request.toJson(),
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
@@ -39,7 +42,7 @@ class RegisterFlowRepository {
     required BankDetailsRequest request,
   }) async {
     await _apiClient.dio.post(
-      'bank/',
+      'banks/',
       data: request.toJson(),
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
@@ -59,7 +62,7 @@ class RegisterFlowRepository {
     });
 
     await _apiClient.dio.post(
-      'kyc/',
+      'kyc-records/',
       data: formData,
       options: Options(
         headers: {

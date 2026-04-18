@@ -1,6 +1,7 @@
 import 'package:farmzy/features/marketplace/providers/marketplace_provider.dart';
 import 'package:farmzy/features/my_crops/providers/my_crops_provider.dart';
 import 'package:farmzy/features/profile/providers/profile_provider.dart';
+import 'package:farmzy/shared/widgets/app_async_state.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,12 +97,13 @@ class ProfileScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(error.toString()),
-          ),
+        loading: () => const AppLoadingState(
+          message: 'Loading your profile...',
+        ),
+        error: (error, _) => AppErrorState(
+          error: error,
+          title: 'Unable to load your profile',
+          onRetry: () => ref.invalidate(profileProvider),
         ),
       ),
     );

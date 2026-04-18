@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:farmzy/core/network/app_network_error.dart';
 import 'package:farmzy/features/marketplace/data/models/marketplace_listing.dart';
 import 'package:farmzy/features/marketplace/data/marketplace_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -163,13 +163,7 @@ class ListingMutationController extends StateNotifier<AsyncValue<String?>> {
   String? readableError() {
     return state.whenOrNull(
       error: (error, _) {
-        if (error is DioException) {
-          final data = error.response?.data;
-          if (data is Map<String, dynamic> && data['message'] != null) {
-            return data['message'].toString();
-          }
-        }
-        return error.toString();
+        return AppNetworkError.userMessage(error);
       },
     );
   }

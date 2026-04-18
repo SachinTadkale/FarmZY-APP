@@ -7,9 +7,10 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.read(secureStorageServiceProvider);
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://10.0.2.2:5000/api/',
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
+      baseUrl: 'http://10.0.2.2:5000/api/v1/',
+      connectTimeout: const Duration(seconds: 8),
+      sendTimeout: const Duration(seconds: 8),
+      receiveTimeout: const Duration(seconds: 8),
       headers: {'Content-Type': 'application/json'},
     ),
   );

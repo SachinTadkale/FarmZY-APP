@@ -15,7 +15,7 @@ class MyCropsRepository {
   MyCropsRepository(this._api);
 
   Future<List<CropProduct>> getMyProducts() async {
-    final response = await _api.get('product/get-product');
+    final response = await _api.get('products/get-product');
     final data = response.data['data'] as List<dynamic>? ?? <dynamic>[];
 
     return data
@@ -41,7 +41,7 @@ class MyCropsRepository {
         ),
     });
 
-    final response = await _api.postForm('product/add-product', data: formData);
+    final response = await _api.postForm('products/add-product', data: formData);
     return (response.data['message'] ?? 'Product created successfully')
         .toString();
   }
@@ -65,7 +65,7 @@ class MyCropsRepository {
     });
 
     final response = await _api.patchForm(
-      'product/udpate-product/$productId',
+      'products/udpate-product/$productId',
       data: formData,
     );
 
@@ -74,7 +74,7 @@ class MyCropsRepository {
   }
 
   Future<String> deleteProduct(String productId) async {
-    final response = await _api.delete('product/delete-product/$productId');
+    final response = await _api.delete('products/delete-product/$productId');
     return (response.data['message'] ?? 'Product deleted successfully')
         .toString();
   }

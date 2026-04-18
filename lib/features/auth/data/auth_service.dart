@@ -11,7 +11,7 @@ class AuthService {
 
   Future<AuthResponse> login(LoginRequest request) async {
     final res = await _api.post(
-      'auth/login',
+      'auth/user/login',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);
@@ -19,7 +19,7 @@ class AuthService {
 
   Future<AuthResponse> requestOtp(OtpRequest request) async {
     final res = await _api.post(
-      'auth/requestOtp',
+      'auth/user/requestOtp',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);
@@ -27,7 +27,7 @@ class AuthService {
 
   Future<AuthResponse> loginWithOtp(OtpRequest request) async {
     final res = await _api.post(
-      'auth/loginWithOtp',
+      'auth/user/loginWithOtp',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);
@@ -35,7 +35,7 @@ class AuthService {
 
   Future<AuthResponse> forgotPassword(OtpRequest request) async {
     final res = await _api.post(
-      'auth/forgotPassword',
+      'auth/user/forgotPassword',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);
@@ -43,7 +43,7 @@ class AuthService {
 
   Future<AuthResponse> resetPassword(ResetPasswordRequest request) async {
     final res = await _api.post(
-      'auth/resetPassword',
+      'auth/user/resetPassword',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);
@@ -51,7 +51,7 @@ class AuthService {
 
   Future<AuthResponse> register(RegisterRequest request) async {
     final res = await _api.post(
-      'auth/register',
+      'auth/user/register',
       data: request.toJson(),
     );
     return AuthResponse.fromJson(res.data);

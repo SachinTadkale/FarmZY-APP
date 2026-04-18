@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmzy/features/my_crops/data/models/crop_product.dart';
 import 'package:farmzy/features/my_crops/providers/my_crops_provider.dart';
+import 'package:farmzy/shared/widgets/app_async_state.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
@@ -86,15 +87,15 @@ class MyCropsScreen extends ConsumerWidget {
                   ),
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    error.toString(),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
+              loading: () => const AppLoadingState(
+                message: 'Loading your crops...',
+              ),
+              error: (error, _) => AppErrorState(
+                error: error,
+                title: 'Unable to load your crops',
+                onRetry: () {
+                  ref.read(myCropsRefreshProvider.notifier).state++;
+                },
               ),
             ),
           ),

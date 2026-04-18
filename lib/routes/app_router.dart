@@ -6,6 +6,7 @@ import 'package:farmzy/features/auth/presentation/screens/reset_password_screen.
 import 'package:farmzy/features/home/presentation/screens/home_screen.dart';
 import 'package:farmzy/features/marketplace/presentation/screens/marketplace_screen.dart';
 import 'package:farmzy/features/my_crops/presentation/screens/my_crops_screen.dart';
+import 'package:farmzy/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:farmzy/features/orders/presentation/screens/orders_screen.dart';
 import 'package:farmzy/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farmzy/features/splash/presentation/screens/splash_screen.dart';
@@ -111,6 +112,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.orders,
             builder: (context, state) => const OrdersScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.orderDetail,
+            builder: (context, state) {
+              final id = (state.pathParameters['id'] ?? '').toString();
+              return OrderDetailScreen(orderId: id);
+            },
           ),
           GoRoute(
             path: RouteNames.profile,
