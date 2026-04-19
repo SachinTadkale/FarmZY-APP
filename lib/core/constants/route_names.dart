@@ -8,6 +8,7 @@ class RouteNames {
   static const profile = '/profile';
   static const register = '/register';
   static const login = '/login';
+  static const transactionHistory = '/transaction-history';
   static const forgotPassword = '/forgot-password';
   static const otpVerification = '/opt-verification';
   static const resetPassword = '/reset-password';

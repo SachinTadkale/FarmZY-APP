@@ -12,9 +12,8 @@ class AppDrawer extends ConsumerWidget {
     _DrawerItemData(Icons.article_outlined, "News"),
     _DrawerItemData(Icons.language_outlined, "Change Language"),
     _DrawerItemData(Icons.agriculture_outlined, "See My Crops"),
-    _DrawerItemData(Icons.add_circle_outline, "Add New Crop"),
-    _DrawerItemData(Icons.account_balance_wallet_outlined, "Payment"),
-    _DrawerItemData(Icons.receipt_long_outlined, "Transaction History"),
+    // _DrawerItemData(Icons.account_balance_wallet_outlined, "Wallet"),
+    _DrawerItemData(Icons.receipt_long_outlined, "See Transaction History"),
     _DrawerItemData(Icons.smart_toy_outlined, "FarmZy AI"),
     _DrawerItemData(Icons.help_outline, "Help"),
     _DrawerItemData(Icons.settings_outlined, "Settings"),
@@ -145,13 +144,13 @@ class _DrawerItem extends StatelessWidget {
           onTap: () {
             Navigator.pop(context);
 
-            if (title == "See My Crops" || title == "Add New Crop") {
+            if (title == "See My Crops") {
               context.go(RouteNames.myCrops);
               return;
             }
 
-            if (title == "Payment") {
-              context.go(RouteNames.orders);
+            if (title == "See Transaction History") {
+              context.go(RouteNames.transactionHistory);
               return;
             }
 

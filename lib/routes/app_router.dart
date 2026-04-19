@@ -9,9 +9,10 @@ import 'package:farmzy/features/my_crops/presentation/screens/my_crops_screen.da
 import 'package:farmzy/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:farmzy/features/orders/presentation/screens/orders_screen.dart';
 import 'package:farmzy/features/profile/presentation/screens/profile_screen.dart';
-import 'package:farmzy/features/splash/presentation/screens/splash_screen.dart';
+import 'package:farmzy/features/splash/presentation/splash_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/login_screen.dart';
 import 'package:farmzy/features/auth/providers/auth_provider.dart';
+import 'package:farmzy/features/transaction/presentation/screens/transaction_history_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:farmzy/shared/layouts/main_layout.dart';
 import 'package:go_router/go_router.dart';
@@ -123,6 +124,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.profile,
             builder: (context, state) => const ProfileScreen(),
+          ),
+
+          GoRoute(
+            path: RouteNames.transactionHistory,
+            builder: (context, state) => const TransactionHistoryScreen(),
           ),
         ],
       ),
