@@ -37,6 +37,14 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
+
+    if (value.isEmpty) {
+      ref.read(ordersSearchProvider.notifier).state = '';
+      return;
+    }
+
+    if (value.length < 2) return;
+
     _debounce = Timer(const Duration(milliseconds: 350), () {
       ref.read(ordersSearchProvider.notifier).state = value;
     });
@@ -47,8 +55,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     final selectedFilter = ref.watch(ordersFilterProvider);
     final ordersAsync = ref.watch(ordersProvider);
     final search = ref.watch(ordersSearchProvider);
+    final theme = Theme.of(context);
 
     return AppScaffold(
+      isLoading: ordersAsync.isLoading && ordersAsync.hasValue,
       body: Column(
         children: [
           Padding(
@@ -61,16 +71,15 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   decoration: InputDecoration(
                     hintText: 'Search by order ID, product, buyer, or status',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: search.isEmpty
-                        ? null
-                        : IconButton(
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
                             onPressed: () {
-                              _debounce?.cancel();
                               _searchController.clear();
-                              ref.read(ordersSearchProvider.notifier).state = '';
+                              _onSearchChanged('');
                             },
                             icon: const Icon(Icons.close_rounded),
-                          ),
+                          )
+                        : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -87,18 +96,31 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               ],
             ),
           ),
+
           Expanded(
             child: ordersAsync.when(
+              skipLoadingOnReload: true,
               data: (orders) {
                 if (orders.isEmpty) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
-                      child: Text(
-                        search.isEmpty
-                            ? 'No orders yet'
-                            : 'No orders matched your search.',
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inventory_2_outlined,
+                              size: 64, color: theme.colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            search.isEmpty
+                                ? 'No orders yet'
+                                : 'No orders matched your search.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );

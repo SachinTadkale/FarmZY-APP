@@ -17,6 +17,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return AppScaffold(
       body: profileAsync.when(
+        skipLoadingOnReload: true,
         data: (profile) {
           final cropCount = cropsAsync.asData?.value.length ?? 0;
           final listingCount =

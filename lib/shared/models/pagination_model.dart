@@ -1,4 +1,4 @@
-class PaginationModel {
+  class PaginationModel {
   final int page;
   final int limit;
   final int total;

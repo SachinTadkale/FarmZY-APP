@@ -35,6 +35,7 @@ class OrderDetailScreen extends ConsumerWidget {
 
     return AppScaffold(
       body: orderAsync.when(
+        skipLoadingOnReload: true,
         data: (order) => _OrderDetailView(
           order: order,
           isActionLoading: actionState.isLoading,

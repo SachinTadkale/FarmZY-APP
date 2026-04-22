@@ -16,7 +16,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
@@ -36,11 +37,15 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
   void initState() {
     super.initState();
 
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
@@ -64,20 +69,16 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
     final authState = ref.watch(authControllerProvider);
 
     ref.listen(authControllerProvider, (previous, next) {
-      next.whenOrNull(
-        data: (action) {
-          if (action == AuthAction.passwordResetCompleted) {
-            AppSnackBar.showSuccess(context, 'Password reset successful.');
-            context.go(RouteNames.login);
-          }
-        },
-        error: (error, _) {
-          AppSnackBar.showError(
-            context,
-            error.toString().replaceFirst('Exception: ', ''),
-          );
-        },
-      );
+      if (previous?.isLoading == true &&
+          next.isLoading == false &&
+          next.error == null) {
+        AppSnackBar.showSuccess(context, 'Password reset successful.');
+        context.go(RouteNames.login);
+      }
+
+      if (next.error != null) {
+        AppSnackBar.showError(context, next.error!);
+      }
     });
 
     return Scaffold(
@@ -94,8 +95,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
 
                   Text(
                     "Reset Password",
-                    style: theme.textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
 
                   const SizedBox(height: 12),
@@ -116,11 +118,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                       hintText: "New Password",
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure1
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () =>
-                            setState(() => _obscure1 = !_obscure1),
+                        icon: Icon(
+                          _obscure1 ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () => setState(() => _obscure1 = !_obscure1),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -137,11 +138,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                       hintText: "Confirm Password",
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscure2
-                            ? Icons.visibility_off
-                            : Icons.visibility),
-                        onPressed: () =>
-                            setState(() => _obscure2 = !_obscure2),
+                        icon: Icon(
+                          _obscure2 ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () => setState(() => _obscure2 = !_obscure2),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -179,8 +179,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                                       .resetPassword(
                                         email: widget.email,
                                         otp: widget.otp,
-                                        newPassword: _passwordController.text.trim(),
-                                        confirmPassword: _confirmController.text.trim(),
+                                        newPassword: _passwordController.text
+                                            .trim(),
+                                        confirmPassword: _confirmController.text
+                                            .trim(),
                                       );
                                 },
                           style: ElevatedButton.styleFrom(

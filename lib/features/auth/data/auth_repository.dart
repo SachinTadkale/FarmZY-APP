@@ -1,6 +1,7 @@
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:farmzy/features/auth/data/auth_service.dart';
+import 'package:farmzy/features/auth/data/login_response.dart';
 import 'package:farmzy/features/auth/data/model/login_request.dart';
 import 'package:farmzy/features/auth/data/model/otp_request.dart';
 import 'package:farmzy/features/auth/data/model/register_request.dart';
@@ -23,7 +24,7 @@ class AuthRepository {
 
   AuthRepository(this._service, this._storage);
 
-  Future<void> login(LoginRequest request) async {
+  Future<LoginResponse> login(LoginRequest request) async {
     final res = await _service.login(request);
 
     if (res.token.isEmpty) {
@@ -41,8 +42,11 @@ class AuthRepository {
       role: payload['role'],
       actorType: payload['actorType'],
       email: request.email,
-      verificationStatus: 'VERIFIED',
+      verificationStatus: res.verificationStatus,
+      registrationStep: res.registrationStep,
+      onboardingCompleted: res.onboardingCompleted,
     );
+    return res;
   }
 
   Future<String> requestOtp(OtpRequest request) async {
@@ -50,7 +54,7 @@ class AuthRepository {
     return res.message.isNotEmpty ? res.message : 'OTP sent successfully.';
   }
 
-  Future<void> loginWithOtp(OtpRequest request) async {
+  Future<LoginResponse> loginWithOtp(OtpRequest request) async {
     final res = await _service.loginWithOtp(request);
 
     if (res.token.isEmpty) {
@@ -68,11 +72,14 @@ class AuthRepository {
       role: payload['role'],
       actorType: payload['actorType'],
       email: request.email,
-      verificationStatus: 'VERIFIED',
+      verificationStatus: res.verificationStatus,
+      registrationStep: res.registrationStep,
+      onboardingCompleted: res.onboardingCompleted,
     );
+    return res;
   }
 
-  Future<void> register(RegisterRequest request) async {
+  Future<LoginResponse> register(RegisterRequest request) async {
     final res = await _service.register(request);
 
     if (res.token.isEmpty) {
@@ -91,8 +98,11 @@ class AuthRepository {
       actorType: payload['actorType'],
       name: request.name,
       email: request.email,
-      verificationStatus: 'PENDING',
+      verificationStatus: res.verificationStatus,
+      registrationStep: res.registrationStep,
+      onboardingCompleted: res.onboardingCompleted,
     );
+    return res;
   }
 
   Future<String> forgotPassword(OtpRequest request) async {
@@ -102,12 +112,10 @@ class AuthRepository {
 
   Future<String> resetPassword(ResetPasswordRequest request) async {
     final res = await _service.resetPassword(request);
-    return res.message.isNotEmpty
-        ? res.message
-        : 'Password reset successful.';
+    return res.message.isNotEmpty ? res.message : 'Password reset successful.';
   }
 
   Future<void> logout() async {
-    await _storage.deleteToken();
+    await _storage.clearSession();
   }
 }
