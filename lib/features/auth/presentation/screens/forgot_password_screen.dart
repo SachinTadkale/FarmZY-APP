@@ -1,5 +1,6 @@
 import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/features/auth/providers/auth_state.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,15 +35,15 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
 
@@ -66,27 +67,24 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
     final surface = theme.colorScheme.surface;
     final authState = ref.watch(authControllerProvider);
 
-    ref.listen(authControllerProvider, (previous, next) {
-      next.whenOrNull(
-        data: (action) {
-          if (action == AuthAction.passwordResetOtpSent) {
-            AppSnackBar.showSuccess(
-              context,
-              'Verification code sent to your email.',
-            );
-            context.go(
-              RouteNames.otpVerification,
-              extra: {'email': _emailController.text.trim()},
-            );
-          }
-        },
-        error: (error, _) {
-          AppSnackBar.showError(
-            context,
-            error.toString().replaceFirst('Exception: ', ''),
-          );
-        },
-      );
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      if (previous?.isLoading == true &&
+          next.isLoading == false &&
+          next.error == null) {
+        AppSnackBar.showSuccess(
+          context,
+          'Verification code sent to your email.',
+        );
+
+        context.go(
+          RouteNames.otpVerification,
+          extra: {'email': _emailController.text.trim()},
+        );
+      }
+
+      if (next.error != null) {
+        AppSnackBar.showError(context, next.error!);
+      }
     });
 
     return GestureDetector(
@@ -119,8 +117,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                       "Enter your registered email address to receive a verification OTP.",
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
 
@@ -147,12 +146,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                         textInputAction: TextInputAction.done,
                         decoration: InputDecoration(
                           hintText: "Registered Email Address",
-                          prefixIcon: Icon(Icons.email_outlined, color: primary),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: primary,
+                          ),
                           filled: true,
                           fillColor: surface,
                           border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                       ),
@@ -162,16 +163,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
                     /// Send OTP Button
                     GestureDetector(
-                      onTapDown: (_) =>
-                          setState(() => _isPressed = true),
-                      onTapUp: (_) =>
-                          setState(() => _isPressed = false),
-                      onTapCancel: () =>
-                          setState(() => _isPressed = false),
+                      onTapDown: (_) => setState(() => _isPressed = true),
+                      onTapUp: (_) => setState(() => _isPressed = false),
+                      onTapCancel: () => setState(() => _isPressed = false),
                       child: AnimatedScale(
                         scale: _isPressed ? 0.96 : 1,
-                        duration:
-                            const Duration(milliseconds: 120),
+                        duration: const Duration(milliseconds: 120),
                         child: SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -189,8 +186,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
 
                                     ref
                                         .read(authControllerProvider.notifier)
-                                        .forgotPassword(_emailController.text.trim());
+                                        .forgotPassword(
+                                          _emailController.text.trim(),
+                                        );
                                   },
+                            style: ElevatedButton.styleFrom(
+                              shape: const StadiumBorder(),
+                            ),
                             child: authState.isLoading
                                 ? const SizedBox(
                                     height: 20,
@@ -201,9 +203,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen>
                                     ),
                                   )
                                 : const Text("Send Verification OTP"),
-                            style: ElevatedButton.styleFrom(
-                              shape: const StadiumBorder(),
-                            ),
                           ),
                         ),
                       ),

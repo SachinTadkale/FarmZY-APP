@@ -15,6 +15,8 @@ class SecureStorageService {
   static const _nameKey = 'auth_name';
   static const _emailKey = 'auth_email';
   static const _verificationStatusKey = 'auth_verification_status';
+  static const _registrationStepKey = 'auth_registration_step';
+  static const _onboardingCompletedKey = 'auth_onboarding_completed';
 
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
@@ -31,6 +33,9 @@ class SecureStorageService {
     String? name,
     String? email,
     String? verificationStatus,
+
+    int? registrationStep,
+    bool? onboardingCompleted,
   }) async {
     if (userId != null) {
       await _storage.write(key: _userIdKey, value: userId);
@@ -53,9 +58,23 @@ class SecureStorageService {
         value: verificationStatus,
       );
     }
+
+    if (registrationStep != null) {
+      await _storage.write(
+        key: _registrationStepKey,
+        value: registrationStep.toString(),
+      );
+    }
+
+    if (onboardingCompleted != null) {
+      await _storage.write(
+        key: _onboardingCompletedKey,
+        value: onboardingCompleted.toString(),
+      );
+    }
   }
 
-  Future<Map<String, String?>> getSession() async {
+  Future<Map<String, dynamic>> getSession() async {
     final values = await Future.wait([
       _storage.read(key: _userIdKey),
       _storage.read(key: _roleKey),
@@ -63,6 +82,8 @@ class SecureStorageService {
       _storage.read(key: _nameKey),
       _storage.read(key: _emailKey),
       _storage.read(key: _verificationStatusKey),
+      _storage.read(key: _registrationStepKey),
+      _storage.read(key: _onboardingCompletedKey),
     ]);
 
     return {
@@ -72,18 +93,13 @@ class SecureStorageService {
       'name': values[3],
       'email': values[4],
       'verificationStatus': values[5],
+      'registrationStep': int.tryParse(values[6] ?? '0') ?? 0,
+      'onboardingCompleted': (values[7] ?? 'false') == 'true',
     };
   }
 
-  Future<void> deleteToken() async {
-    await _storage.delete(key: _tokenKey);
-    await Future.wait([
-      _storage.delete(key: _userIdKey),
-      _storage.delete(key: _roleKey),
-      _storage.delete(key: _actorTypeKey),
-      _storage.delete(key: _nameKey),
-      _storage.delete(key: _emailKey),
-      _storage.delete(key: _verificationStatusKey),
-    ]);
+  Future<void> clearSession() async {
+    await _storage.deleteAll();
   }
+
 }

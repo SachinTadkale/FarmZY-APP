@@ -24,11 +24,15 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  final List<TextEditingController> _controllers =
-      List.generate(_otpLength, (_) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    _otpLength,
+    (_) => TextEditingController(),
+  );
 
-  final List<FocusNode> _focusNodes =
-      List.generate(_otpLength, (_) => FocusNode());
+  final List<FocusNode> _focusNodes = List.generate(
+    _otpLength,
+    (_) => FocusNode(),
+  );
 
   bool _isPressed = false;
 
@@ -41,15 +45,15 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
   }
@@ -67,8 +71,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
   }
 
   /// Merge OTP digits
-  String get otpCode =>
-      _controllers.map((c) => c.text).join();
+  String get otpCode => _controllers.map((c) => c.text).join();
 
   bool get isOtpComplete => otpCode.length == _otpLength;
 
@@ -113,19 +116,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
     final authState = ref.watch(authControllerProvider);
 
     ref.listen(authControllerProvider, (previous, next) {
-      next.whenOrNull(
-        data: (action) {
-          if (action == AuthAction.passwordResetOtpSent) {
-            AppSnackBar.showSuccess(context, 'OTP sent to your email.');
-          }
-        },
-        error: (error, _) {
-          AppSnackBar.showError(
-            context,
-            error.toString().replaceFirst('Exception: ', ''),
-          );
-        },
-      );
+      if (next.error != null) {
+        AppSnackBar.showError(context, next.error!);
+      }
     });
 
     return GestureDetector(
@@ -144,8 +137,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
 
                     Text(
                       "Verify Your Email",
-                      style: theme.textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
 
                     const SizedBox(height: 12),
@@ -154,8 +148,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
                       "Enter the 6-digit verification code sent to ${widget.email}.",
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface
-                            .withValues(alpha: 0.6),
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.6,
+                        ),
                       ),
                     ),
 
@@ -163,8 +158,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
 
                     /// OTP BOXES
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: List.generate(_otpLength, (index) {
                         return Focus(
                           onKeyEvent: (_, event) {
@@ -177,25 +171,20 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
                               controller: _controllers[index],
                               focusNode: _focusNodes[index],
                               textAlign: TextAlign.center,
-                              keyboardType:
-                                  TextInputType.number,
+                              keyboardType: TextInputType.number,
                               maxLength: 1,
                               inputFormatters: [
-                                FilteringTextInputFormatter
-                                    .digitsOnly
+                                FilteringTextInputFormatter.digitsOnly,
                               ],
                               decoration: InputDecoration(
                                 counterText: "",
                                 filled: true,
-                                fillColor:
-                                    theme.colorScheme.surface,
+                                fillColor: theme.colorScheme.surface,
                                 border: OutlineInputBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(16),
                                 ),
                               ),
-                              onChanged: (value) =>
-                                  _onOtpChanged(value, index),
+                              onChanged: (value) => _onOtpChanged(value, index),
                             ),
                           ),
                         );
@@ -206,16 +195,12 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
 
                     /// Verify Button
                     GestureDetector(
-                      onTapDown: (_) =>
-                          setState(() => _isPressed = true),
-                      onTapUp: (_) =>
-                          setState(() => _isPressed = false),
-                      onTapCancel: () =>
-                          setState(() => _isPressed = false),
+                      onTapDown: (_) => setState(() => _isPressed = true),
+                      onTapUp: (_) => setState(() => _isPressed = false),
+                      onTapCancel: () => setState(() => _isPressed = false),
                       child: AnimatedScale(
                         scale: _isPressed ? 0.96 : 1,
-                        duration:
-                            const Duration(milliseconds: 120),
+                        duration: const Duration(milliseconds: 120),
                         child: SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -234,8 +219,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen>
                             style: ElevatedButton.styleFrom(
                               shape: const StadiumBorder(),
                             ),
-                            child:
-                                const Text("Verify & Continue"),
+                            child: const Text("Verify & Continue"),
                           ),
                         ),
                       ),

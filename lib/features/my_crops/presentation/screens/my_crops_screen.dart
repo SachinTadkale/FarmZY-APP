@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmzy/features/my_crops/data/models/crop_product.dart';
 import 'package:farmzy/features/my_crops/providers/my_crops_provider.dart';
@@ -8,12 +9,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-class MyCropsScreen extends ConsumerWidget {
+class MyCropsScreen extends ConsumerStatefulWidget {
   const MyCropsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyCropsScreen> createState() => _MyCropsScreenState();
+}
+
+class _MyCropsScreenState extends ConsumerState<MyCropsScreen> {
+  late final TextEditingController _searchController;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController =
+        TextEditingController(text: ref.read(myCropsSearchProvider));
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+
+    if (value.isEmpty) {
+      ref.read(myCropsSearchProvider.notifier).state = '';
+      return;
+    }
+
+    if (value.length < 2) return;
+
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      ref.read(myCropsSearchProvider.notifier).state = value;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final cropsAsync = ref.watch(myCropsProvider);
+    final theme = Theme.of(context);
 
     ref.listen(cropMutationControllerProvider, (previous, next) {
       next.whenOrNull(
@@ -23,7 +62,7 @@ class MyCropsScreen extends ConsumerWidget {
             ref.read(cropMutationControllerProvider.notifier).clear();
           }
         },
-        error: (_, __) {
+        error: (_, _) {
           final message =
               ref.read(cropMutationControllerProvider.notifier).readableError();
           AppSnackBar.showError(context, message ?? 'Unable to update crops.');
@@ -32,6 +71,7 @@ class MyCropsScreen extends ConsumerWidget {
     });
 
     return AppScaffold(
+      isLoading: cropsAsync.isLoading && cropsAsync.hasValue,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCropSheet(context, ref),
         icon: const Icon(Icons.add),
@@ -42,27 +82,48 @@ class MyCropsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search your crops',
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                        icon: const Icon(Icons.close_rounded),
+                      )
+                    : null,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              onChanged: (value) =>
-                  ref.read(myCropsSearchProvider.notifier).state = value,
             ),
           ),
           Expanded(
             child: cropsAsync.when(
+              skipLoadingOnReload: true,
               data: (crops) {
                 if (crops.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text(
-                        'No crops added yet. Add your first product to start creating marketplace listings.',
-                        textAlign: TextAlign.center,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.eco_outlined,
+                              size: 64, color: theme.colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No crops added yet. Add your first product to start creating marketplace listings.',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -82,7 +143,7 @@ class MyCropsScreen extends ConsumerWidget {
                         onDelete: () => _confirmDelete(context, ref, crop),
                       );
                     },
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemCount: crops.length,
                   ),
                 );
@@ -273,9 +334,6 @@ class _CropCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.15),
-        ),
       ),
       child: Row(
         children: [
@@ -288,7 +346,7 @@ class _CropCard extends StatelessWidget {
                   ? CachedNetworkImage(
                       imageUrl: crop.imageUrl!,
                       fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => const _CropPlaceholder(),
+                      errorWidget: (_, _, _) => const _CropPlaceholder(),
                     )
                   : const _CropPlaceholder(),
             ),

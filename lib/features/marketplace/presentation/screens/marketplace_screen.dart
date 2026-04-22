@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmzy/features/marketplace/data/models/marketplace_listing.dart';
 import 'package:farmzy/features/marketplace/providers/marketplace_provider.dart';
@@ -10,11 +11,51 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class MarketplaceScreen extends ConsumerWidget {
+class MarketplaceScreen extends ConsumerStatefulWidget {
   const MarketplaceScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MarketplaceScreen> createState() => _MarketplaceScreenState();
+}
+
+class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
+  late final TextEditingController _searchController;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    final filters = ref.read(marketplaceFilterProvider);
+    _searchController = TextEditingController(text: filters.search);
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    final filters = ref.read(marketplaceFilterProvider);
+
+    if (value.isEmpty) {
+      ref.read(marketplaceFilterProvider.notifier).state =
+          filters.copyWith(search: '');
+      return;
+    }
+
+    if (value.length < 2) return;
+
+    _debounce = Timer(const Duration(milliseconds: 350), () {
+      ref.read(marketplaceFilterProvider.notifier).state =
+          filters.copyWith(search: value);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final marketAsync = ref.watch(marketplaceListingsProvider);
     final myListingsAsync = ref.watch(myListingsProvider);
     final filters = ref.watch(marketplaceFilterProvider);
@@ -27,7 +68,7 @@ class MarketplaceScreen extends ConsumerWidget {
             ref.read(listingMutationControllerProvider.notifier).clear();
           }
         },
-        error: (_, __) {
+        error: (_, _) {
           final message = ref
               .read(listingMutationControllerProvider.notifier)
               .readableError();
@@ -35,6 +76,9 @@ class MarketplaceScreen extends ConsumerWidget {
         },
       );
     });
+
+    final isAnyLoading = (marketAsync.isLoading && marketAsync.hasValue) ||
+        (myListingsAsync.isLoading && myListingsAsync.hasValue);
 
     return DefaultTabController(
       length: 2,
@@ -51,25 +95,35 @@ class MarketplaceScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   TextField(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
                     decoration: InputDecoration(
                       hintText: 'Search by crop or category',
                       prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                _onSearchChanged('');
+                              },
+                              icon: const Icon(Icons.close_rounded),
+                            )
+                          : null,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    onChanged: (value) {
-                      ref.read(marketplaceFilterProvider.notifier).state =
-                          filters.copyWith(search: value);
-                    },
                   ),
                   const SizedBox(height: 10),
                   Row(
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: filters.category.isEmpty ? null : filters.category,
-                          decoration: const InputDecoration(labelText: 'Category'),
+                          initialValue: filters.category.isEmpty ? null : filters.category,
+                          decoration: const InputDecoration(
+                            labelText: 'Category',
+                            isDense: true,
+                          ),
                           items: const [
                             DropdownMenuItem(
                               value: 'Vegetable',
@@ -97,8 +151,11 @@ class MarketplaceScreen extends ConsumerWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: DropdownButtonFormField<String>(
-                          value: filters.sortBy,
-                          decoration: const InputDecoration(labelText: 'Sort by'),
+                          initialValue: filters.sortBy,
+                          decoration: const InputDecoration(
+                            labelText: 'Sort by',
+                            isDense: true,
+                          ),
                           items: const [
                             DropdownMenuItem(
                               value: 'createdAt',
@@ -121,6 +178,7 @@ class MarketplaceScreen extends ConsumerWidget {
               ),
             ),
             const TabBar(
+              dividerColor: Colors.transparent,
               tabs: [
                 Tab(text: 'Marketplace'),
                 Tab(text: 'My Listings'),
@@ -200,7 +258,7 @@ class MarketplaceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<CropProduct>(
-                    value: selectedProduct,
+                    initialValue: selectedProduct,
                     decoration: const InputDecoration(labelText: 'My crop'),
                     items: products
                         .map(
@@ -345,7 +403,7 @@ class MarketplaceScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedStatus,
+                    initialValue: selectedStatus,
                     decoration: const InputDecoration(labelText: 'Status'),
                     items: const [
                       DropdownMenuItem(
@@ -444,13 +502,30 @@ class _ListingPane extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return listingsAsync.when(
+      skipLoadingOnReload: true,
       data: (result) {
         if (result.listings.isEmpty) {
           return Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text(emptyMessage, textAlign: TextAlign.center),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.storefront_outlined,
+                      size: 64, color: theme.colorScheme.outline),
+                  const SizedBox(height: 16),
+                  Text(
+                    emptyMessage,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -460,7 +535,7 @@ class _ListingPane extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
           itemCount: result.listings.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final listing = result.listings[index];
             return Container(
@@ -468,12 +543,6 @@ class _ListingPane extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .outline
-                      .withValues(alpha: 0.12),
-                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,7 +559,7 @@ class _ListingPane extends StatelessWidget {
                               ? CachedNetworkImage(
                                   imageUrl: listing.product.imageUrl!,
                                   fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) =>
+                                  errorWidget: (_, _, _) =>
                                       const _ListingImagePlaceholder(),
                                 )
                               : const _ListingImagePlaceholder(),

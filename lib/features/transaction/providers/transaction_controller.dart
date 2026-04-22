@@ -26,13 +26,19 @@ final transactionsProvider = FutureProvider((ref) async {
   final search = ref.watch(transactionSearchProvider);
   final status = ref.watch(transactionStatusProvider);
   final sort = ref.watch(transactionSortProvider);
+  final filter = ref.watch(transactionFilterProvider);
 
-  final response = await ref
-      .read(transactionRepositoryProvider)
-      .getTransactions(
+  String? direction;
+  if (filter == TransactionFilter.earnings) {
+    direction = "CREDIT";
+  } else if (filter == TransactionFilter.expenses) {
+    direction = "DEBIT";
+  }
+
+  final response = await ref.read(transactionRepositoryProvider).getTransactions(
         page: 1,
         limit: 20,
-        direction: "CREDIT",
+        direction: direction,
         search: search,
         status: status,
         sort: sort,

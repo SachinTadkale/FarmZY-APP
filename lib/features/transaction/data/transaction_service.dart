@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/transaction/data/model/transaction_response.dart';
 

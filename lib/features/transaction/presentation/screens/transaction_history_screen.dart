@@ -19,7 +19,6 @@ class _TransactionFilterTabs extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(transactionFilterProvider);
-    final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -83,24 +82,33 @@ class _TabPill extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: isSelected
-              ? selectedColor.withValues(alpha: 0.15)
-              : theme.colorScheme.surface,
+          color: isSelected ? selectedColor : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isSelected
                 ? selectedColor
                 : theme.colorScheme.outline.withValues(alpha: 0.2),
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: selectedColor.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
         ),
         child: Text(
           title,
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: isSelected ? selectedColor : theme.colorScheme.onSurface,
-            fontWeight: FontWeight.w600,
+            color: isSelected
+                ? theme.colorScheme.onPrimary
+                : theme.colorScheme.onSurface,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
       ),
@@ -119,16 +127,27 @@ class _TransactionHistoryScreenState
     _searchController = TextEditingController();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _onSearchChanged(String value) {
     _debounce?.cancel();
 
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (value.isEmpty) {
-        ref.read(transactionSearchProvider.notifier).state = '';
-        return;
-      }
-      if (value.length < 2) return;
+    // 🔴 Requirement: If input is empty → reset immediately
+    if (value.isEmpty) {
+      ref.read(transactionSearchProvider.notifier).state = '';
+      return;
+    }
 
+    // 🔴 Requirement: If input < 2 → do NOT call API (don't update provider)
+    if (value.length < 2) return;
+
+    // 🔴 Requirement: Use 500ms debounce
+    _debounce = Timer(const Duration(milliseconds: 500), () {
       ref.read(transactionSearchProvider.notifier).state = value;
     });
   }
@@ -136,87 +155,157 @@ class _TransactionHistoryScreenState
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
-    final search = ref.watch(transactionSearchProvider);
+    final theme = Theme.of(context);
 
     return AppScaffold(
+      isLoading: transactionsAsync.isLoading && transactionsAsync.hasValue,
       body: Column(
         children: [
+          // 🔹 Search Bar Group
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
               controller: _searchController,
+              onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search by txn id or amount',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: search.isEmpty
-                    ? null
-                    : IconButton(
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
                         onPressed: () {
                           _searchController.clear();
-                          ref.read(transactionSearchProvider.notifier).state =
-                              '';
+                          _onSearchChanged(''); // Trigger immediate reset
                         },
-                        icon: const Icon(Icons.close),
-                      ),
+                        icon: const Icon(Icons.close_rounded, size: 20),
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.1)),
                 ),
               ),
-              onChanged: _onSearchChanged,
             ),
           ),
 
+          // 🔹 Filter Tabs
           _TransactionFilterTabs(),
 
+          // 🔹 Dropdown Filters Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                /// 🔹 Status Filter
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: ref.watch(transactionStatusProvider),
-                    hint: const Text("Status"),
-                    items: ["SUCCESS", "FAILED"]
-                        .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-                        .toList(),
-                    onChanged: (val) {
-                      ref.read(transactionStatusProvider.notifier).state = val;
-                    },
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Status",
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: ref.watch(transactionStatusProvider),
+                        hint: const Text("All Status"),
+                        isDense: true,
+                        items: ["SUCCESS", "FAILED"]
+                            .map((e) => DropdownMenuItem(
+                                value: e,
+                                child: Text(e, style: theme.textTheme.bodyMedium)))
+                            .toList(),
+                        onChanged: (val) {
+                          ref.read(transactionStatusProvider.notifier).state = val;
+                        },
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-
-                const SizedBox(width: 10),
-
-                /// 🔹 Sort Filter
+                const SizedBox(width: 12),
                 Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: ref.watch(transactionSortProvider),
-                    items: [
-                      DropdownMenuItem(value: "desc", child: Text("Newest")),
-                      DropdownMenuItem(value: "asc", child: Text("Oldest")),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Sort By",
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        initialValue: ref.watch(transactionSortProvider),
+                        isDense: true,
+                        items: [
+                          DropdownMenuItem(
+                              value: "desc",
+                              child: Text("Newest",
+                                  style: theme.textTheme.bodyMedium)),
+                          DropdownMenuItem(
+                              value: "asc",
+                              child: Text("Oldest",
+                                  style: theme.textTheme.bodyMedium)),
+                        ],
+                        onChanged: (val) {
+                          ref.read(transactionSortProvider.notifier).state = val!;
+                        },
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
                     ],
-                    onChanged: (val) {
-                      ref.read(transactionSortProvider.notifier).state = val!;
-                    },
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: OutlineInputBorder(),
-                    ),
                   ),
                 ),
               ],
             ),
           ),
+
+          const SizedBox(height: 8),
+
           Expanded(
             child: transactionsAsync.when(
+              // skipLoadingOnReload: true, ensures we keep showing data while loading in background
+              skipLoadingOnReload: true,
               data: (transactions) {
                 if (transactions.isEmpty) {
-                  return const Center(child: Text("No transactions found"));
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.receipt_long_outlined,
+                            size: 64, color: theme.colorScheme.outline),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No transactions found",
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
                 }
 
                 return RefreshIndicator(
@@ -224,10 +313,9 @@ class _TransactionHistoryScreenState
                     ref.read(transactionRefreshProvider.notifier).state++;
                   },
                   child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-                    itemBuilder: (_, i) =>
-                        TransactionCard(txn: transactions[i]),
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    itemBuilder: (_, i) => TransactionCard(txn: transactions[i]),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemCount: transactions.length,
                   ),
                 );

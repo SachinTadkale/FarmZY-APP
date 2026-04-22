@@ -1,8 +1,5 @@
-import 'package:farmzy/core/constants/route_names.dart';
-import 'package:farmzy/features/auth/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -26,33 +23,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeAnimation =
-        CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _fadeAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.15),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
-    _navigate();
-  }
-
-  Future<void> _navigate() async {
-    await Future.delayed(const Duration(seconds: 2));
-    await ref.read(authBootstrapProvider.future);
-
-    final isLoggedIn = ref.read(authProvider);
-
-    if (!mounted) return;
-
-    if (isLoggedIn) {
-      context.go(RouteNames.home);
-    } else {
-      context.go(RouteNames.login);
-    }
   }
 
   @override
@@ -124,8 +105,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 /// Loader
                 CircularProgressIndicator(
                   strokeWidth: 3,
-                  valueColor:
-                      AlwaysStoppedAnimation(colorScheme.primary),
+                  valueColor: AlwaysStoppedAnimation(colorScheme.primary),
                 ),
               ],
             ),

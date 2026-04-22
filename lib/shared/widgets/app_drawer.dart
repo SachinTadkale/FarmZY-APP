@@ -55,7 +55,7 @@ class AppDrawer extends ConsumerWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 itemCount: _items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 2),
+                separatorBuilder: (_, _) => const SizedBox(height: 2),
                 itemBuilder: (context, index) {
                   final item = _items[index];
                   return _DrawerItem(icon: item.icon, title: item.title);

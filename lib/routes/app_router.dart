@@ -3,6 +3,8 @@ import 'package:farmzy/features/auth/presentation/screens/forgot_password_screen
 import 'package:farmzy/features/auth/presentation/screens/otp_verification_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/register_flow_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/features/auth/providers/auth_state.dart';
 import 'package:farmzy/features/home/presentation/screens/home_screen.dart';
 import 'package:farmzy/features/marketplace/presentation/screens/marketplace_screen.dart';
 import 'package:farmzy/features/my_crops/presentation/screens/my_crops_screen.dart';
@@ -11,7 +13,6 @@ import 'package:farmzy/features/orders/presentation/screens/orders_screen.dart';
 import 'package:farmzy/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farmzy/features/splash/presentation/splash_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/login_screen.dart';
-import 'package:farmzy/features/auth/providers/auth_provider.dart';
 import 'package:farmzy/features/transaction/presentation/screens/transaction_history_screen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:farmzy/shared/layouts/main_layout.dart';
@@ -19,9 +20,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authNotifier = ValueNotifier<bool>(ref.read(authProvider));
+  final authNotifier = ValueNotifier<AuthState>(
+    ref.read(authControllerProvider),
+  );
+
   ref.onDispose(authNotifier.dispose);
-  ref.listen<bool>(authProvider, (_, next) {
+
+  ref.listen<AuthState>(authControllerProvider, (_, next) {
     authNotifier.value = next;
   });
 
@@ -30,11 +35,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: authNotifier,
 
     redirect: (context, state) {
-      final isLoggedIn = authNotifier.value;
+      final auth = authNotifier.value;
+      if (!auth.isInitialized) {
+        return RouteNames.splash;
+      }
+
+      final isLoggedIn = auth.isLoggedIn;
+
       final isGoingToLogin = state.fullPath == RouteNames.login;
       final isGoingToRegister = state.fullPath == RouteNames.register;
 
-      // 🔐 Protect private routes only
       if (!isLoggedIn &&
           !isGoingToLogin &&
           !isGoingToRegister &&
@@ -45,14 +55,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return RouteNames.login;
       }
 
-      // Prevent logged-in users from going back to login/register
-      if (isLoggedIn && (isGoingToLogin || isGoingToRegister)) {
-        return RouteNames.home;
+      if (isLoggedIn && !auth.onboardingCompleted) {
+        return RouteNames.register;
       }
 
+      if (isLoggedIn && auth.onboardingCompleted) {
+        if (state.fullPath != RouteNames.home) {
+          return RouteNames.home;
+        }
+      }
       return null;
     },
-
     routes: [
       /// Splash
       GoRoute(

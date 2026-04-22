@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/features/auth/providers/auth_controller.dart';
-import 'package:farmzy/features/auth/providers/auth_provider.dart';
+import 'package:farmzy/features/auth/providers/auth_state.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -97,38 +97,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
   void _handleAuthStateChange(
     BuildContext context,
-    AsyncValue<AuthAction?>? previous,
-    AsyncValue<AuthAction?> next,
+    AuthState? previous,
+    AuthState next,
   ) {
-    next.whenOrNull(
-      data: (action) {
-        if (action == AuthAction.otpSent) {
-          setState(() {
-            _otpRequested = true;
-          });
-          _clearOtpFields();
-          _startOtpCountdown();
-          if (_otpFocusNodes.isNotEmpty) {
-            _otpFocusNodes.first.requestFocus();
-          }
-          AppSnackBar.showSuccess(context, 'OTP sent to your email.');
-        } else if (action == AuthAction.loggedIn) {
-          ref.read(authProvider.notifier).state = true;
-          context.go(RouteNames.home);
-        }
-      },
-      error: (error, _) {
-        AppSnackBar.showError(context, _formatError(error));
-      },
-    );
-  }
+    /// ✅ OTP Sent
+    if (previous?.isLoading == true &&
+        next.isLoading == false &&
+        next.error == null &&
+        isOtpMode &&
+        !_otpRequested) {
+      setState(() {
+        _otpRequested = true;
+      });
 
-  String _formatError(Object error) {
-    final message = error.toString();
-    if (message.startsWith('Exception: ')) {
-      return message.substring('Exception: '.length);
+      _clearOtpFields();
+      _startOtpCountdown();
+
+      if (_otpFocusNodes.isNotEmpty) {
+        _otpFocusNodes.first.requestFocus();
+      }
+
+      AppSnackBar.showSuccess(context, 'OTP sent to your email.');
     }
-    return message;
+
+    /// Login Success
+    if (previous?.isLoggedIn == false && next.isLoggedIn) {
+      context.go(RouteNames.home);
+    }
+
+    /// Error Handling
+    if (next.error != null) {
+      AppSnackBar.showError(context, next.error!);
+    }
   }
 
   void _clearOtpFields() {
@@ -276,7 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     final surface = theme.colorScheme.surface;
     final authState = ref.watch(authControllerProvider);
 
-    ref.listen(authControllerProvider, (previous, next) {
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
       _handleAuthStateChange(context, previous, next);
     });
 

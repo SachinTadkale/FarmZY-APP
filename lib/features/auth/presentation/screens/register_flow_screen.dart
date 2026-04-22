@@ -4,6 +4,7 @@ import 'package:farmzy/features/auth/presentation/widgets/register-steps/basic_d
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/farm_details_step.dart';
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/under_review_step.dart';
 import 'package:farmzy/features/auth/presentation/widgets/register-steps/verification_step.dart';
+import 'package:farmzy/features/auth/providers/auth_controller.dart';
 import 'package:farmzy/features/auth/providers/register_flow_controller.dart';
 import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
@@ -24,14 +25,13 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
   static final RegExp _phoneRegex = RegExp(r'^\d{10}$');
   static final RegExp _aadhaarRegex = RegExp(r'^\d{12}$');
   static final RegExp _panRegex = RegExp(r'^[A-Z]{5}[0-9]{4}[A-Z]$');
-  static final RegExp _passwordRegex =
-      RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$');
+  static final RegExp _passwordRegex = RegExp(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$',
+  );
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-
-  bool isPressed = false;
 
   static const int totalSteps = 5;
 
@@ -63,6 +63,7 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
     super.dispose();
   }
 
+  /// ✅ FIXED: use step parameter only
   Widget _buildCurrentStep(int step) {
     switch (step) {
       case 0:
@@ -91,12 +92,14 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
             _passwordRegex.hasMatch(state.password.trim()) &&
             state.confirmPassword.trim().isNotEmpty &&
             state.password.trim() == state.confirmPassword.trim();
+
       case 1:
         return state.stateName.trim().isNotEmpty &&
             state.district.trim().isNotEmpty &&
             state.village.trim().isNotEmpty &&
             RegExp(r'^\d{6}$').hasMatch(state.pincode.trim()) &&
             double.tryParse(state.landArea.trim()) != null;
+
       case 2:
         return state.accountHolder.trim().isNotEmpty &&
             state.accountNumber.trim().isNotEmpty &&
@@ -104,19 +107,21 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
             state.bankName.trim().isNotEmpty &&
             state.ifsc.trim().isNotEmpty &&
             state.accountNumber.trim() == state.confirmAccountNumber.trim();
+
       case 3:
         final idNumber = state.idNumber.trim().toUpperCase();
-        final isIdValid =
-            state.idType == 'AADHAR'
-                ? _aadhaarRegex.hasMatch(idNumber)
-                : state.idType == 'PAN'
-                ? _panRegex.hasMatch(idNumber)
-                : false;
+        final isIdValid = state.idType == 'AADHAR'
+            ? _aadhaarRegex.hasMatch(idNumber)
+            : state.idType == 'PAN'
+            ? _panRegex.hasMatch(idNumber)
+            : false;
+
         return state.idType.trim().isNotEmpty &&
             isIdValid &&
             state.frontImage != null &&
             (state.idType != 'AADHAR' || state.backImage != null) &&
             state.agreeTerms;
+
       default:
         return true;
     }
@@ -127,11 +132,19 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
     final state = ref.watch(registerProvider);
     final notifier = ref.read(registerProvider.notifier);
     final submissionState = ref.watch(registerFlowControllerProvider);
+    final auth = ref.watch(authControllerProvider);
     final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+
+    /// 🔥 CRITICAL FIX: Sync backend step → UI step
+    if (state.currentStep != auth.registrationStep) {
+      Future.microtask(() {
+        ref.read(registerProvider.notifier).setStep(auth.registrationStep);
+      });
+    }
 
     final double progress = (state.currentStep + 1) / totalSteps;
 
+    /// Error listener
     ref.listen(registerFlowControllerProvider, (previous, next) {
       next.whenOrNull(
         error: (error, _) {
@@ -146,7 +159,6 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        resizeToAvoidBottomInset: true,
         body: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnimation,
@@ -156,60 +168,26 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   children: [
-                    const SizedBox(height: 10),
-
-                    /// Logo
-                    Row(
-                      children: [
-                        Image.asset(
-                          'assets/images/FarmZY_Logo.png',
-                          height: 35,
-                        ),
-                      ],
-                    ),
-
                     const SizedBox(height: 25),
 
-                    /// Step Text
-                    Text(
-                      "Step ${state.currentStep + 1} of $totalSteps",
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                    Text("Step ${state.currentStep + 1} of $totalSteps"),
 
                     const SizedBox(height: 10),
 
-                    /// Rounded Progress Bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 8,
-                        backgroundColor: primary.withValues(alpha: 0.15),
-                        valueColor: AlwaysStoppedAnimation(primary),
-                      ),
+                    LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 2,
+                      backgroundColor: theme.colorScheme.surface,
                     ),
 
                     const SizedBox(height: 30),
 
-                    /// 🔥 ONLY STEP CONTENT SCROLLS
                     Expanded(
-                      child: SingleChildScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 400),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 400),
-                            child: SizedBox(
-                              key: ValueKey(state.currentStep),
-                              child: _buildCurrentStep(state.currentStep),
-                            ),
-                          ),
-                        ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 400),
+                        child: _buildCurrentStep(state.currentStep),
                       ),
                     ),
-
-                    const SizedBox(height: 20),
 
                     /// Buttons
                     if (state.currentStep < 4)
@@ -229,8 +207,9 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
 
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: submissionState.isLoading
-                                      || !_isCurrentStepValid(state)
+                              onPressed:
+                                  submissionState.isLoading ||
+                                      !_isCurrentStepValid(state)
                                   ? null
                                   : () {
                                       ref
@@ -241,35 +220,30 @@ class _RegisterFlowScreenState extends ConsumerState<RegisterFlowScreen>
                                           .submitCurrentStep();
                                     },
                               child: submissionState.isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
+                                  ? const CircularProgressIndicator()
                                   : Text(
-                                      state.currentStep == 3 ? "Submit" : "Next",
+                                      state.currentStep == 3
+                                          ? "Submit"
+                                          : "Next",
                                     ),
                             ),
                           ),
                         ],
                       ),
 
+                    /// Final step
                     if (state.currentStep == 4)
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ref.read(registerProvider.notifier).reset();
-                            context.push(RouteNames.login);
-                          },
-                          child: const Text("Go to Log In"),
-                        ),
-                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          /// ✅ Mark onboarding complete
+                          ref
+                              .read(authControllerProvider.notifier)
+                              .updateOnboardingCompleted();
 
-                    const SizedBox(height: 20),
+                          context.go(RouteNames.home);
+                        },
+                        child: const Text("Go to Home"),
+                      ),
                   ],
                 ),
               ),

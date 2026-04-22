@@ -1,94 +1,118 @@
 import 'package:dio/dio.dart';
+import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:farmzy/features/auth/data/auth_repository.dart';
 import 'package:farmzy/features/auth/data/model/login_request.dart';
 import 'package:farmzy/features/auth/data/model/otp_request.dart';
 import 'package:farmzy/features/auth/data/model/reset_password_request.dart';
-import 'package:farmzy/features/auth/providers/auth_provider.dart';
+import 'package:farmzy/features/auth/providers/auth_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-enum AuthAction {
-  otpSent,
-  passwordResetOtpSent,
-  passwordResetCompleted,
-  loggedIn,
-  loggedOut,
-}
-
 // Provider
-final authControllerProvider =
-    StateNotifierProvider<AuthController, AsyncValue<AuthAction?>>((ref) {
-      final repo = ref.read(authRepositoryProvider);
-      return AuthController(ref, repo);
-    });
+final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
+  (ref) {
+    final repo = ref.read(authRepositoryProvider);
+    return AuthController(ref, repo);
+  },
+);
 
 // Controller
-class AuthController extends StateNotifier<AsyncValue<AuthAction?>> {
+class AuthController extends StateNotifier<AuthState> {
   final Ref _ref;
   final AuthRepository _repo;
+  AuthController(this._ref, this._repo) : super(AuthState());
 
-  AuthController(this._ref, this._repo) : super(const AsyncData(null));
+  /* -------------------------------------------------------------------------- */
+  /*                                   LOGIN                                    */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> login(String email, String password) async {
-    state = const AsyncLoading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await _repo.login(LoginRequest(email: email, password: password));
+      final res = await _repo.login(
+        LoginRequest(email: email, password: password),
+      );
 
-      _ref.read(authProvider.notifier).state = true;
-      state = const AsyncData(AuthAction.loggedIn);
-    } on DioException catch (e, stackTrace) {
-      _setErrorState(e, stackTrace);
-    } catch (e, stackTrace) {
-      _ref.read(authProvider.notifier).state = false;
-      state = AsyncError(e, stackTrace);
+      state = state.copyWith(
+        token: res.token,
+        registrationStep: res.registrationStep,
+        verificationStatus: res.verificationStatus,
+        onboardingCompleted: res.onboardingCompleted,
+        isLoggedIn: true,
+        isLoading: false,
+      );
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, error: _extractError(e));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
+  /* -------------------------------------------------------------------------- */
+  /*                               LOGIN WITH OTP                               */
+  /* -------------------------------------------------------------------------- */
+
+  Future<void> loginWithOtp(String email, String otp) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await _repo.loginWithOtp(OtpRequest(email: email, otp: otp));
+
+      state = state.copyWith(
+        token: res.token,
+        registrationStep: res.registrationStep,
+        verificationStatus: res.verificationStatus,
+        onboardingCompleted: res.onboardingCompleted,
+        isLoggedIn: true,
+        isLoading: false,
+      );
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, error: _extractError(e));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                  REQUEST OTP                               */
+  /* -------------------------------------------------------------------------- */
+
   Future<void> requestOtp(String email) async {
-    state = const AsyncLoading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       await _repo.requestOtp(OtpRequest(email: email));
-      _ref.read(authProvider.notifier).state = false;
-      state = const AsyncData(AuthAction.otpSent);
-    } on DioException catch (e, stackTrace) {
-      _setErrorState(e, stackTrace);
-    } catch (e, stackTrace) {
-      _ref.read(authProvider.notifier).state = false;
-      state = AsyncError(e, stackTrace);
+
+      state = state.copyWith(isLoading: false);
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, error: _extractError(e));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> loginWithOtp(String email, String otp) async {
-    state = const AsyncLoading();
-
-    try {
-      await _repo.loginWithOtp(OtpRequest(email: email, otp: otp));
-      _ref.read(authProvider.notifier).state = true;
-      state = const AsyncData(AuthAction.loggedIn);
-    } on DioException catch (e, stackTrace) {
-      _setErrorState(e, stackTrace);
-    } catch (e, stackTrace) {
-      _ref.read(authProvider.notifier).state = false;
-      state = AsyncError(e, stackTrace);
-    }
-  }
+  /* -------------------------------------------------------------------------- */
+  /*                              FORGOT PASSWORD                               */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> forgotPassword(String email) async {
-    state = const AsyncLoading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       await _repo.forgotPassword(OtpRequest(email: email));
-      _ref.read(authProvider.notifier).state = false;
-      state = const AsyncData(AuthAction.passwordResetOtpSent);
-    } on DioException catch (e, stackTrace) {
-      _setErrorState(e, stackTrace);
-    } catch (e, stackTrace) {
-      _ref.read(authProvider.notifier).state = false;
-      state = AsyncError(e, stackTrace);
+
+      state = state.copyWith(isLoading: false);
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, error: _extractError(e));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              RESET PASSWORD                                */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> resetPassword({
     required String email,
@@ -96,7 +120,7 @@ class AuthController extends StateNotifier<AsyncValue<AuthAction?>> {
     required String newPassword,
     required String confirmPassword,
   }) async {
-    state = const AsyncLoading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       await _repo.resetPassword(
@@ -107,35 +131,58 @@ class AuthController extends StateNotifier<AsyncValue<AuthAction?>> {
           confirmPassword: confirmPassword,
         ),
       );
-      _ref.read(authProvider.notifier).state = false;
-      state = const AsyncData(AuthAction.passwordResetCompleted);
-    } on DioException catch (e, stackTrace) {
-      _setErrorState(e, stackTrace);
-    } catch (e, stackTrace) {
-      _ref.read(authProvider.notifier).state = false;
-      state = AsyncError(e, stackTrace);
+
+      state = state.copyWith(isLoading: false);
+    } on DioException catch (e) {
+      state = state.copyWith(isLoading: false, error: _extractError(e));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   LOGOUT                                   */
+  /* -------------------------------------------------------------------------- */
 
   Future<void> logout() async {
-    try {
-      await _repo.logout();
-    } finally {
-      _ref.read(authProvider.notifier).state = false;
-      state = const AsyncData(AuthAction.loggedOut);
-    }
+    await _repo.logout();
+
+    state = AuthState(); // reset everything
   }
 
-  void _setErrorState(DioException e, StackTrace stackTrace) {
-    final responseData = e.response?.data;
-    final message =
-        responseData is Map<String, dynamic>
-            ? ((responseData['message'] ??
-                        responseData['error'] ??
-                        'Authentication failed.')
-                    .toString())
-            : (e.message ?? 'Authentication failed.');
-    _ref.read(authProvider.notifier).state = false;
-    state = AsyncError(Exception(message), stackTrace);
+  /* -------------------------------------------------------------------------- */
+  /*                               ERROR HANDLER                                */
+  /* -------------------------------------------------------------------------- */
+
+  String _extractError(DioException e) {
+    final data = e.response?.data;
+
+    if (data is Map<String, dynamic>) {
+      return (data['message'] ?? data['error'] ?? 'Something went wrong')
+          .toString();
+    }
+
+    return e.message ?? 'Something went wrong';
+  }
+
+  void updateOnboardingCompleted() {
+    state = state.copyWith(
+      onboardingCompleted: true,
+      registrationStep: 4, // final step
+    );
+  }
+
+  Future<void> restoreSession() async {
+    final storage = _ref.read(secureStorageServiceProvider);
+    final session = await storage.getSession();
+
+    state = state.copyWith(
+      token: session['token'],
+      registrationStep: session['registrationStep'] ?? 0,
+      onboardingCompleted: session['onboardingCompleted'] ?? false,
+      verificationStatus: session['verificationStatus'] ?? 'PENDING',
+      isLoggedIn: true,
+      isInitialized: true,
+    );
   }
 }
