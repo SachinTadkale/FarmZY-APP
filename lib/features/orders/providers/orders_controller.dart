@@ -1,8 +1,16 @@
+/**
+ * Module: Orders Controller
+ * Purpose: Implements the Orders Controller module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/features/orders/data/models/order_model.dart';
 import 'package:farmzy/features/orders/data/order_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+/**
+ * Orders Filter Tab.
+ */
 enum OrdersFilterTab {
   newOrders,
   active,
@@ -45,11 +53,17 @@ final orderActionControllerProvider =
       return OrderActionController(ref);
     });
 
+/**
+ * Order Action Controller.
+ */
 class OrderActionController extends StateNotifier<AsyncValue<String?>> {
   final Ref _ref;
 
   OrderActionController(this._ref) : super(const AsyncValue.data(null));
 
+/**
+ * Accept Order.
+ */
   Future<void> acceptOrder(String orderId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -60,6 +74,9 @@ class OrderActionController extends StateNotifier<AsyncValue<String?>> {
     });
   }
 
+/**
+ * Reject Order.
+ */
   Future<void> rejectOrder(String orderId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -70,15 +87,24 @@ class OrderActionController extends StateNotifier<AsyncValue<String?>> {
     });
   }
 
+/**
+ * Clear.
+ */
   void clear() {
     state = const AsyncValue.data(null);
   }
 }
 
+/**
+ * Is New Order.
+ */
 bool _isNewOrder(OrderModel order) {
   return order.orderStatus.toUpperCase() == 'CREATED';
 }
 
+/**
+ * Is Active Order.
+ */
 bool _isActiveOrder(OrderModel order) {
   const activeStatuses = {
     'ACCEPTED',
@@ -93,6 +119,9 @@ bool _isActiveOrder(OrderModel order) {
   return activeStatuses.contains(order.orderStatus.toUpperCase());
 }
 
+/**
+ * Is Closed Order.
+ */
 bool _isClosedOrder(OrderModel order) {
   const closedStatuses = {
     'COMPLETED',

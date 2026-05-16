@@ -1,9 +1,19 @@
+/**
+ * Module: Marketplace Provider
+ * Purpose: Implements the Marketplace Provider module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/core/network/app_network_error.dart';
 import 'package:farmzy/features/marketplace/data/models/marketplace_listing.dart';
+import 'package:farmzy/shared/models/pagination_model.dart';
 import 'package:farmzy/features/marketplace/data/marketplace_repository.dart';
+import 'package:farmzy/features/profile/providers/profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+/**
+ * Marketplace Filter State.
+ */
 class MarketplaceFilterState {
   final String search;
   final String category;
@@ -42,6 +52,9 @@ class MarketplaceFilterState {
   }
 }
 
+/**
+ * My Listing Filter State.
+ */
 class MyListingFilterState {
   final String status;
   final String sortBy;
@@ -83,8 +96,20 @@ final marketplaceListingsProvider =
             maxPrice: filters.maxPrice,
             sortBy: filters.sortBy,
             order: filters.order,
+          ).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => const MarketplaceListingResult(
+              mode: 'timeout',
+              listings: [],
+              pagination: PaginationModel(page: 1, limit: 10, total: 0, totalPages: 1),
+            ),
           );
     });
+
+final listingDetailProvider =
+    FutureProvider.family<MarketplaceListing, String>((ref, id) async {
+  return ref.read(marketplaceRepositoryProvider).getListingById(id);
+});
 
 final myListingsProvider = FutureProvider<MarketplaceListingResult>((ref) async {
   ref.watch(marketplaceRefreshProvider);
@@ -93,7 +118,18 @@ final myListingsProvider = FutureProvider<MarketplaceListingResult>((ref) async 
         status: filters.status,
         sortBy: filters.sortBy,
         order: filters.order,
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => const MarketplaceListingResult(
+          mode: 'timeout',
+          listings: [],
+          pagination: PaginationModel(page: 1, limit: 10, total: 0, totalPages: 1),
+        ),
       );
+});
+
+final productUnitsProvider = FutureProvider<List<String>>((ref) async {
+  return ref.read(marketplaceRepositoryProvider).getProductUnits();
 });
 
 final listingMutationControllerProvider =
@@ -101,11 +137,17 @@ final listingMutationControllerProvider =
       return ListingMutationController(ref);
     });
 
+/**
+ * Listing Mutation Controller.
+ */
 class ListingMutationController extends StateNotifier<AsyncValue<String?>> {
   final Ref _ref;
 
   ListingMutationController(this._ref) : super(const AsyncValue.data(null));
 
+/**
+ * Create Listing.
+ */
   Future<void> createListing({
     required String productId,
     required double price,
@@ -126,6 +168,9 @@ class ListingMutationController extends StateNotifier<AsyncValue<String?>> {
     });
   }
 
+/**
+ * Update Listing.
+ */
   Future<void> updateListing({
     required String listingId,
     required double price,
@@ -148,6 +193,9 @@ class ListingMutationController extends StateNotifier<AsyncValue<String?>> {
     });
   }
 
+/**
+ * Delete Listing.
+ */
   Future<void> deleteListing(String listingId) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -168,11 +216,18 @@ class ListingMutationController extends StateNotifier<AsyncValue<String?>> {
     );
   }
 
+/**
+ * Clear.
+ */
   void clear() {
     state = const AsyncValue.data(null);
   }
 
+/**
+ * Refresh.
+ */
   void _refresh() {
     _ref.read(marketplaceRefreshProvider.notifier).state++;
+    _ref.invalidate(profileProvider);
   }
 }

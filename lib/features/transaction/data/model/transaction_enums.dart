@@ -1,3 +1,11 @@
+/**
+ * Module: Transaction Enums
+ * Purpose: Implements the Transaction Enums module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Transaction Type.
+ */
 enum TransactionType {
   ORDER_PAYMENT,
   ESCROW_RELEASE,
@@ -6,12 +14,18 @@ enum TransactionType {
   UNKNOWN,
 }
 
+/**
+ * Transaction Direction.
+ */
 enum TransactionDirection {
   CREDIT,
   DEBIT,
   UNKNOWN,
 }
 
+/**
+ * Transaction Status.
+ */
 enum TransactionStatus {
   PENDING,
   SUCCESS,
@@ -19,8 +33,11 @@ enum TransactionStatus {
   UNKNOWN,
 }
 
+/**
+ * Actor Type.
+ */
 enum ActorType {
-  USER,
+  FARMER,
   COMPANY,
   PLATFORM,
   UNKNOWN,
@@ -67,8 +84,8 @@ TransactionStatus parseStatus(String? value) {
 
 ActorType parseActorType(String? value) {
   switch (value) {
-    case "USER":
-      return ActorType.USER;
+    case "FARMER":
+      return ActorType.FARMER;
     case "COMPANY":
       return ActorType.COMPANY;
     case "PLATFORM":

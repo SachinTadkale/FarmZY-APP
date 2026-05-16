@@ -1,3 +1,11 @@
+/**
+ * Module: Auth Response
+ * Purpose: Implements the Auth Response module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Auth Response.
+ */
 class AuthResponse {
   final String token;
   final String message;

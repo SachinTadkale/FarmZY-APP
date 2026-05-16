@@ -1,9 +1,18 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/features/auth/providers/auth_controller.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
+import 'package:farmzy/shared/widgets/auth_page_scaffold.dart';
+import 'package:farmzy/core/theme/app_spacing.dart';
+import 'package:farmzy/core/theme/app_radius.dart';
+import 'package:farmzy/core/theme/app_animations.dart';
+import 'package:farmzy/shared/widgets/app_text_field.dart';
+import 'package:farmzy/shared/widgets/app_button.dart';
+import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   final String email;
@@ -16,51 +25,44 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() =>
-      _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
-    with SingleTickerProviderStateMixin {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-
-  bool _obscure1 = true;
-  bool _obscure2 = true;
-  bool _isPressed = false;
-
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _controller.forward();
-  }
+  final _passwordFocus = FocusNode();
+  final _confirmFocus = FocusNode();
 
   @override
   void dispose() {
-    _controller.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
+    _passwordFocus.dispose();
+    _confirmFocus.dispose();
     super.dispose();
+  }
+
+  void _handleSubmit() {
+    if (_passwordController.text.trim().isEmpty) {
+      AppSnackBar.showError(context, 'auth.reset_password.errors.new_password_required'.tr());
+      return;
+    }
+    if (_confirmController.text.trim().isEmpty) {
+      AppSnackBar.showError(context, 'auth.reset_password.errors.confirm_password_required'.tr());
+      return;
+    }
+    if (_passwordController.text.trim() != _confirmController.text.trim()) {
+      AppSnackBar.showError(context, 'auth.reset_password.errors.password_mismatch'.tr());
+      return;
+    }
+
+    ref.read(authControllerProvider.notifier).resetPassword(
+          email: widget.email,
+          otp: widget.otp,
+          newPassword: _passwordController.text.trim(),
+          confirmPassword: _confirmController.text.trim(),
+        );
   }
 
   @override
@@ -69,143 +71,97 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
     final authState = ref.watch(authControllerProvider);
 
     ref.listen(authControllerProvider, (previous, next) {
-      if (previous?.isLoading == true &&
-          next.isLoading == false &&
-          next.error == null) {
-        AppSnackBar.showSuccess(context, 'Password reset successful.');
+      if (previous?.isLoading == true && next.isLoading == false && next.error == null) {
+        AppSnackBar.showSuccess(context, 'auth.reset_password.success_message'.tr());
         context.go(RouteNames.login);
       }
-
-      if (next.error != null) {
-        AppSnackBar.showError(context, next.error!);
-      }
+      if (next.error != null) AppSnackBar.showError(context, next.error!);
     });
 
-    return Scaffold(
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+    return AuthPageScaffold(
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: AppSpacing.xxl),
+
+            /// ICON
+            GlassContainer(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              borderRadius: 32,
+              opacity: 0.1,
+              blur: 20,
+              child: Icon(
+                Icons.security_rounded,
+                size: 64,
+                color: theme.colorScheme.primary,
+              ),
+            ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            Text(
+              'auth.reset_password.title'.tr(),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+                fontSize: 32,
+              ),
+            ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+
+            const SizedBox(height: AppSpacing.sm),
+
+            Text(
+              widget.email,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w600,
+              ),
+            ).animate().fadeIn(delay: 100.ms),
+
+            const SizedBox(height: AppSpacing.xxl),
+
+            /// INPUT CARD
+            GlassContainer(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              borderRadius: AppRadius.card,
+              opacity: 0.05,
+              blur: 30,
               child: Column(
                 children: [
-                  const SizedBox(height: 60),
-
-                  Text(
-                    "Reset Password",
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    widget.email,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  TextField(
+                  AppTextField(
                     controller: _passwordController,
-                    obscureText: _obscure1,
-                    decoration: InputDecoration(
-                      hintText: "New Password",
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure1 ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () => setState(() => _obscure1 = !_obscure1),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    focusNode: _passwordFocus,
+                    nextFocusNode: _confirmFocus,
+                    isPassword: true,
+                    label: 'auth.reset_password.new_password_label'.tr(),
+                    prefixIcon: Icons.lock_rounded,
+                    hint: "Enter new password",
                   ),
-
-                  const SizedBox(height: 16),
-
-                  TextField(
+                  const SizedBox(height: AppSpacing.lg),
+                  AppTextField(
                     controller: _confirmController,
-                    obscureText: _obscure2,
-                    decoration: InputDecoration(
-                      hintText: "Confirm Password",
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscure2 ? Icons.visibility_off : Icons.visibility,
-                        ),
-                        onPressed: () => setState(() => _obscure2 = !_obscure2),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
+                    focusNode: _confirmFocus,
+                    isPassword: true,
+                    textInputAction: TextInputAction.done,
+                    label: 'auth.reset_password.confirm_password_label'.tr(),
+                    prefixIcon: Icons.lock_clock_rounded,
+                    onSubmitted: (_) => _handleSubmit(),
+                    hint: "Confirm new password",
                   ),
-
-                  const SizedBox(height: 32),
-
-                  GestureDetector(
-                    onTapDown: (_) => setState(() => _isPressed = true),
-                    onTapUp: (_) => setState(() => _isPressed = false),
-                    onTapCancel: () => setState(() => _isPressed = false),
-                    child: AnimatedScale(
-                      scale: _isPressed ? 0.96 : 1,
-                      duration: const Duration(milliseconds: 120),
-                      child: SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: ElevatedButton(
-                          onPressed: authState.isLoading
-                              ? null
-                              : () {
-                                  if (_passwordController.text.isEmpty ||
-                                      _confirmController.text.isEmpty) {
-                                    AppSnackBar.showError(
-                                      context,
-                                      'Please fill both password fields.',
-                                    );
-                                    return;
-                                  }
-
-                                  ref
-                                      .read(authControllerProvider.notifier)
-                                      .resetPassword(
-                                        email: widget.email,
-                                        otp: widget.otp,
-                                        newPassword: _passwordController.text
-                                            .trim(),
-                                        confirmPassword: _confirmController.text
-                                            .trim(),
-                                      );
-                                },
-                          style: ElevatedButton.styleFrom(
-                            shape: const StadiumBorder(),
-                          ),
-                          child: authState.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text("Reset Password"),
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: AppSpacing.xl),
+                  AppButton(
+                    text: 'auth.reset_password.reset_button'.tr(),
+                    isLoading: authState.isLoading,
+                    onPressed: _handleSubmit,
                   ),
                 ],
               ),
-            ),
-          ),
+            ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+
+            const SizedBox(height: AppSpacing.xxl),
+          ],
         ),
       ),
     );

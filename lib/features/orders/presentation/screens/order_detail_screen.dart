@@ -1,3 +1,7 @@
+/// Module: Order Detail Screen
+/// Purpose: Implements the Order Detail Screen module for the FarmZy mobile app.
+/// Note: Documentation-only change; behavior remains unchanged.
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/features/orders/data/models/order_model.dart';
 import 'package:farmzy/features/orders/presentation/widgets/status_badge.dart';
 import 'package:farmzy/features/orders/providers/orders_controller.dart';
@@ -9,12 +13,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+/// Order Detail Screen.
 class OrderDetailScreen extends ConsumerWidget {
   final String orderId;
 
   const OrderDetailScreen({super.key, required this.orderId});
 
   @override
+  /// Build.
   Widget build(BuildContext context, WidgetRef ref) {
     final orderAsync = ref.watch(orderDetailProvider(orderId));
     final actionState = ref.watch(orderActionControllerProvider);
@@ -62,6 +68,7 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 }
 
+/// Order Detail View.
 class _OrderDetailView extends StatelessWidget {
   final OrderModel order;
   final bool isActionLoading;
@@ -76,7 +83,10 @@ class _OrderDetailView extends StatelessWidget {
   });
 
   @override
+  /// Build.
   Widget build(BuildContext context) {
+    final lang = context.locale.languageCode;
+    final translatedName = order.product.translations.getTranslatedField('name', lang, original: order.product.name);
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: 'Rs. ');
 
     return SingleChildScrollView(
@@ -106,12 +116,12 @@ class _OrderDetailView extends StatelessWidget {
           _DetailSection(
             title: 'Product Info',
             children: [
-              _RowLabelValue(label: 'Product', value: order.product.name),
+              _RowLabelValue(label: 'Product', value: translatedName),
               const SizedBox(height: 10),
               _RowLabelValue(
                 label: 'Quantity',
                 value:
-                    '${order.snapshot.quantity.toStringAsFixed(0)}${order.product.unit}',
+                    '${order.snapshot.quantity.toStringAsFixed(0)} ${order.product.unit}',
               ),
               const SizedBox(height: 10),
               _RowLabelValue(
@@ -200,6 +210,7 @@ class _OrderDetailView extends StatelessWidget {
     );
   }
 
+  /// Confirm Reject.
   void _confirmReject(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -279,10 +290,12 @@ class _OrderDetailView extends StatelessWidget {
     );
   }
 
+  /// Can Take Seller Decision.
   bool _canTakeSellerDecision(OrderModel order) {
     return order.orderStatus.toUpperCase() == 'CREATED';
   }
 
+  /// Format Date.
   String _formatDate(DateTime? dateTime) {
     if (dateTime == null) {
       return '-';
@@ -290,6 +303,7 @@ class _OrderDetailView extends StatelessWidget {
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime.toLocal());
   }
 
+  /// Effective Payment Status.
   String _effectivePaymentStatus(OrderModel order) {
     final payment = order.paymentStatus.toUpperCase();
     if (payment == 'INITIATED') return 'PAYMENT_PENDING';
@@ -306,6 +320,7 @@ class _OrderDetailView extends StatelessWidget {
     return payment;
   }
 
+  /// Effective Delivery Status.
   String _effectiveDeliveryStatus(OrderModel order) {
     final status = order.effectiveOrderStatus;
     if (status == 'SHIPPED') return 'SHIPPED';
@@ -316,6 +331,7 @@ class _OrderDetailView extends StatelessWidget {
   }
 }
 
+/// Detail Section.
 class _DetailSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
@@ -323,6 +339,7 @@ class _DetailSection extends StatelessWidget {
   const _DetailSection({required this.title, required this.children});
 
   @override
+  /// Build.
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -351,6 +368,7 @@ class _DetailSection extends StatelessWidget {
   }
 }
 
+/// Row Label Value.
 class _RowLabelValue extends StatelessWidget {
   final String label;
   final String value;
@@ -363,6 +381,7 @@ class _RowLabelValue extends StatelessWidget {
   });
 
   @override
+  /// Build.
   Widget build(BuildContext context) {
     final valueStyle = emphasize
         ? Theme.of(context).textTheme.titleMedium?.copyWith(

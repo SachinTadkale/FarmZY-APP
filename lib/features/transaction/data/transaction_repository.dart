@@ -1,3 +1,8 @@
+/**
+ * Module: Transaction Repository
+ * Purpose: Implements the Transaction Repository module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/transaction/data/model/transaction_response.dart';
@@ -9,11 +14,17 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return TransactionRepository(service);
 });
 
+/**
+ * Transaction Repository.
+ */
 class TransactionRepository {
   final TransactionService _service;
 
   TransactionRepository(this._service);
 
+/**
+ * Get Transactions.
+ */
   Future<TransactionListResponse> getTransactions({
     int page = 1,
     int limit = 10,

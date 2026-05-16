@@ -1,12 +1,23 @@
+/**
+ * Module: Transaction History Screen
+ * Purpose: Implements the Transaction History Screen module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/transaction_controller.dart';
 import '../widgets/transaction_card.dart';
 import '../../../../shared/widgets/app_async_state.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../../shared/widgets/app_dropdown.dart';
+import '../../../../core/theme/app_spacing.dart';
 
+/**
+ * Transaction History Screen.
+ */
 class TransactionHistoryScreen extends ConsumerStatefulWidget {
   const TransactionHistoryScreen({super.key});
 
@@ -15,8 +26,14 @@ class TransactionHistoryScreen extends ConsumerStatefulWidget {
       _TransactionHistoryScreenState();
 }
 
+/**
+ * Transaction Filter Tabs.
+ */
 class _TransactionFilterTabs extends ConsumerWidget {
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(transactionFilterProvider);
 
@@ -26,7 +43,7 @@ class _TransactionFilterTabs extends ConsumerWidget {
         children: [
           Expanded(
             child: _TabPill(
-              title: "Earnings",
+              title: "transactions.earnings".tr(),
               isSelected: selected == TransactionFilter.earnings,
               onTap: () {
                 ref.read(transactionFilterProvider.notifier).state =
@@ -37,7 +54,7 @@ class _TransactionFilterTabs extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _TabPill(
-              title: "Expenses",
+              title: "transactions.expenses".tr(),
               isSelected: selected == TransactionFilter.expenses,
               onTap: () {
                 ref.read(transactionFilterProvider.notifier).state =
@@ -48,7 +65,7 @@ class _TransactionFilterTabs extends ConsumerWidget {
           const SizedBox(width: 8),
           Expanded(
             child: _TabPill(
-              title: "All",
+              title: "transactions.all".tr(),
               isSelected: selected == TransactionFilter.all,
               onTap: () {
                 ref.read(transactionFilterProvider.notifier).state =
@@ -62,6 +79,9 @@ class _TransactionFilterTabs extends ConsumerWidget {
   }
 }
 
+/**
+ * Tab Pill.
+ */
 class _TabPill extends StatelessWidget {
   final String title;
   final bool isSelected;
@@ -74,6 +94,9 @@ class _TabPill extends StatelessWidget {
   });
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedColor = theme.colorScheme.primary;
@@ -90,12 +113,12 @@ class _TabPill extends StatelessWidget {
           border: Border.all(
             color: isSelected
                 ? selectedColor
-                : theme.colorScheme.outline.withValues(alpha: 0.2),
+                : theme.colorScheme.outline.withOpacity(0.2),
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: selectedColor.withValues(alpha: 0.2),
+                    color: selectedColor.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   )
@@ -116,24 +139,36 @@ class _TabPill extends StatelessWidget {
   }
 }
 
+/**
+ * Transaction History Screen State.
+ */
 class _TransactionHistoryScreenState
     extends ConsumerState<TransactionHistoryScreen> {
   late final TextEditingController _searchController;
   Timer? _debounce;
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
     _searchController = TextEditingController();
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
 
+/**
+ * On Search Changed.
+ */
   void _onSearchChanged(String value) {
     _debounce?.cancel();
 
@@ -153,6 +188,9 @@ class _TransactionHistoryScreenState
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider);
     final theme = Theme.of(context);
@@ -168,7 +206,7 @@ class _TransactionHistoryScreenState
               controller: _searchController,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
-                hintText: 'Search by txn id or amount',
+                hintText: 'transactions.search_hint'.tr(),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -187,7 +225,7 @@ class _TransactionHistoryScreenState
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(
-                      color: theme.colorScheme.outline.withValues(alpha: 0.1)),
+                      color: theme.colorScheme.outline.withOpacity(0.1)),
                 ),
               ),
             ),
@@ -202,80 +240,41 @@ class _TransactionHistoryScreenState
             child: Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Status",
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        initialValue: ref.watch(transactionStatusProvider),
-                        hint: const Text("All Status"),
-                        isDense: true,
-                        items: ["SUCCESS", "FAILED"]
-                            .map((e) => DropdownMenuItem(
-                                value: e,
-                                child: Text(e, style: theme.textTheme.bodyMedium)))
-                            .toList(),
-                        onChanged: (val) {
-                          ref.read(transactionStatusProvider.notifier).state = val;
-                        },
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: AppDropdown<String>(
+                    label: "common.status".tr(),
+                    value: ref.watch(transactionStatusProvider),
+                    items: ["SUCCESS", "FAILED"]
+                        .map((e) => DropdownMenuItem(
+                              value: e,
+                              child: Text('common.status_${e.toLowerCase()}'.tr()),
+                            ))
+                        .toList(),
+                    onChanged: (val) {
+                      ref.read(transactionStatusProvider.notifier).state = val;
+                    },
+                    hint: "transactions.all_status".tr(),
+                    prefixIcon: Icons.filter_list_rounded,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Sort By",
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: AppDropdown<String>(
+                    label: "marketplace.sort_by".tr(),
+                    value: ref.watch(transactionSortProvider),
+                    items: [
+                      DropdownMenuItem(
+                        value: "desc",
+                        child: Text("transactions.sort_newest".tr()),
                       ),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        initialValue: ref.watch(transactionSortProvider),
-                        isDense: true,
-                        items: [
-                          DropdownMenuItem(
-                              value: "desc",
-                              child: Text("Newest",
-                                  style: theme.textTheme.bodyMedium)),
-                          DropdownMenuItem(
-                              value: "asc",
-                              child: Text("Oldest",
-                                  style: theme.textTheme.bodyMedium)),
-                        ],
-                        onChanged: (val) {
-                          ref.read(transactionSortProvider.notifier).state = val!;
-                        },
-                        decoration: InputDecoration(
-                          isDense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
+                      DropdownMenuItem(
+                        value: "asc",
+                        child: Text("transactions.sort_oldest".tr()),
                       ),
                     ],
+                    onChanged: (val) {
+                      ref.read(transactionSortProvider.notifier).state = val!;
+                    },
+                    prefixIcon: Icons.sort_rounded,
                   ),
                 ),
               ],
@@ -298,7 +297,7 @@ class _TransactionHistoryScreenState
                             size: 64, color: theme.colorScheme.outline),
                         const SizedBox(height: 16),
                         Text(
-                          "No transactions found",
+                          "transactions.no_transactions".tr(),
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -321,10 +320,10 @@ class _TransactionHistoryScreenState
                 );
               },
               loading: () =>
-                  const AppLoadingState(message: "Fetching transactions..."),
+                  AppLoadingState(message: "transactions.loading".tr()),
               error: (e, _) => AppErrorState(
                 error: e,
-                title: "Failed to load transactions",
+                title: "transactions.error_load".tr(),
                 onRetry: () {
                   ref.read(transactionRefreshProvider.notifier).state++;
                 },

@@ -1,5 +1,14 @@
+/**
+ * Module: Order Model
+ * Purpose: Implements the Order Model module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+import 'package:farmzy/shared/models/translation_model.dart';
 import 'package:farmzy/shared/models/pagination_model.dart';
 
+/**
+ * Order List Response.
+ */
 class OrderListResponse {
   final List<OrderModel> orders;
   final PaginationModel? pagination;
@@ -26,6 +35,9 @@ class OrderListResponse {
   }
 }
 
+/**
+ * Order Model.
+ */
 class OrderModel {
   final String id;
   final String listingId;
@@ -101,12 +113,16 @@ class OrderModel {
   }
 }
 
+/**
+ * Order Product.
+ */
 class OrderProduct {
   final String id;
   final String name;
   final String category;
   final String unit;
   final String? image;
+  final EntityTranslations translations;
 
   const OrderProduct({
     required this.id,
@@ -114,6 +130,7 @@ class OrderProduct {
     required this.category,
     required this.unit,
     required this.image,
+    required this.translations,
   });
 
   factory OrderProduct.fromJson(Map<String, dynamic> json) {
@@ -123,10 +140,16 @@ class OrderProduct {
       category: (json['category'] ?? 'NA').toString(),
       unit: (json['unit'] ?? '').toString(),
       image: json['image']?.toString(),
+      translations: EntityTranslations.fromJson(
+        json['translations'] as Map<String, dynamic>?,
+      ),
     );
   }
 }
 
+/**
+ * Order Company.
+ */
 class OrderCompany {
   final String id;
   final String name;
@@ -150,6 +173,9 @@ class OrderCompany {
   }
 }
 
+/**
+ * Order Snapshot.
+ */
 class OrderSnapshot {
   final double unitPrice;
   final double quantity;

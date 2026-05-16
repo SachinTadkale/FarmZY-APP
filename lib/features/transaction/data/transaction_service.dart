@@ -1,11 +1,22 @@
+/**
+ * Module: Transaction Service
+ * Purpose: Implements the Transaction Service module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/transaction/data/model/transaction_response.dart';
 
+/**
+ * Transaction Service.
+ */
 class TransactionService {
   final ApiClient _api;
 
   TransactionService(this._api);
 
+/**
+ * Get Transactions.
+ */
   Future<TransactionListResponse> getTransactions({
     int page = 1,
     int limit = 10,

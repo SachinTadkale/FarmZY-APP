@@ -1,7 +1,15 @@
+/**
+ * Module: Basic Details Step
+ * Purpose: Implements the Basic Details Step module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/**
+ * Basic Details Step.
+ */
 class BasicDetailsStep extends ConsumerStatefulWidget {
   const BasicDetailsStep({super.key});
 
@@ -9,6 +17,9 @@ class BasicDetailsStep extends ConsumerStatefulWidget {
   ConsumerState<BasicDetailsStep> createState() => _BasicDetailsStepState();
 }
 
+/**
+ * Basic Details Step State.
+ */
 class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
   static const double _fieldRadius = 12;
 
@@ -43,6 +54,9 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
   String? selectedGender;
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
     final registerState = ref.read(registerProvider);
@@ -74,6 +88,9 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     nameController.dispose();
     phoneController.dispose();
@@ -90,6 +107,9 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
     super.dispose();
   }
 
+/**
+ * Update Basic State.
+ */
   void _updateBasicState({
     String? name,
     String? phone,
@@ -110,10 +130,16 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
         );
   }
 
+/**
+ * Next Field.
+ */
   void nextField(FocusNode next) {
     FocusScope.of(context).requestFocus(next);
   }
 
+/**
+ * Build Animated Field.
+ */
   Widget buildAnimatedField({
     required bool isFocused,
     required Widget child,
@@ -126,7 +152,7 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
         boxShadow: isFocused
             ? [
                 BoxShadow(
-                  color: primary.withValues(alpha: 0.20),
+                  color: primary.withOpacity(0.20),
                   blurRadius: 12,
                 ),
               ]
@@ -137,6 +163,9 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final showEmailError =
         !isEmailFocused &&
@@ -373,7 +402,7 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: primary.withValues(alpha: 0.08),
+            color: primary.withOpacity(0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -395,6 +424,9 @@ class _BasicDetailsStepState extends ConsumerState<BasicDetailsStep> {
   }
 }
 
+/**
+ * Gender Card.
+ */
 class _GenderCard extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -409,6 +441,9 @@ class _GenderCard extends StatelessWidget {
   });
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;
@@ -423,7 +458,7 @@ class _GenderCard extends StatelessWidget {
           color: selected ? primary : theme.colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected ? primary : primary.withValues(alpha: 0.18),
+            color: selected ? primary : primary.withOpacity(0.18),
             width: 1,
           ),
         ),

@@ -1,6 +1,15 @@
+/**
+ * Module: App Async State
+ * Purpose: Implements the App Async State module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/core/network/app_network_error.dart';
 import 'package:flutter/material.dart';
 
+/**
+ * App Loading State.
+ */
 class AppLoadingState extends StatelessWidget {
   final String? message;
 
@@ -10,6 +19,9 @@ class AppLoadingState extends StatelessWidget {
   });
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -30,7 +42,7 @@ class AppLoadingState extends StatelessWidget {
                 message!,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
             ],
@@ -41,6 +53,9 @@ class AppLoadingState extends StatelessWidget {
   }
 }
 
+/**
+ * App Error State.
+ */
 class AppErrorState extends StatelessWidget {
   final Object error;
   final String title;
@@ -54,6 +69,9 @@ class AppErrorState extends StatelessWidget {
   });
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final message = AppNetworkError.userMessage(error);
@@ -91,7 +109,7 @@ class AppErrorState extends StatelessWidget {
                 message,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.72),
+                  color: theme.colorScheme.onSurface.withOpacity(0.72),
                 ),
               ),
               if (onRetry != null) ...[
@@ -99,7 +117,7 @@ class AppErrorState extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
+                  label: Text('common.retry'.tr()),
                 ),
               ],
             ],

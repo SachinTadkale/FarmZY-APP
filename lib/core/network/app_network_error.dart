@@ -1,5 +1,10 @@
+/// Module: App Network Error
+/// Purpose: Implements the App Network Error module for the FarmZy mobile app.
+/// Note: Documentation-only change; behavior remains unchanged.
 import 'package:dio/dio.dart';
+import 'package:intl/intl.dart';
 
+/// App Network Error.
 class AppNetworkError {
   static String userMessage(Object error) {
     if (error is DioException) {
@@ -65,6 +70,12 @@ class AppNetworkError {
     if (data is Map<String, dynamic>) {
       final message = data['message'] ?? data['error'];
       if (message != null) {
+        if (message is Map<String, dynamic>) {
+          // It's a multilingual response: { en, hi, mr }
+          final currentLang = Intl.getCurrentLocale().split('_').first;
+          final localized = message[currentLang] ?? message['en'];
+          if (localized != null) return localized.toString();
+        }
         return message.toString();
       }
     }

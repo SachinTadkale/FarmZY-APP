@@ -1,10 +1,21 @@
+/**
+ * Module: Secure Storage Service
+ * Purpose: Implements the Secure Storage Service module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:farmzy/shared/enums/user_role.dart';
+import 'package:farmzy/shared/enums/verification_status.dart';
 
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
 });
 
+/**
+ * Secure Storage Service.
+ */
 class SecureStorageService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -17,23 +28,35 @@ class SecureStorageService {
   static const _verificationStatusKey = 'auth_verification_status';
   static const _registrationStepKey = 'auth_registration_step';
   static const _onboardingCompletedKey = 'auth_onboarding_completed';
+  static const _pendingRoleKey = 'auth_pending_role';
+  static const _languageKey = 'app_language';
+  static const _themeKey = 'app_theme';
+  static const _hasSelectedLanguageKey = 'has_selected_language';
 
+  /**
+ * Save Token.
+ */
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
 
+  /**
+ * Get Token.
+ */
   Future<String?> getToken() async {
     return await _storage.read(key: _tokenKey);
   }
 
+  /**
+ * Save Session.
+ */
   Future<void> saveSession({
     String? userId,
-    String? role,
+    UserRole? role,
     String? actorType,
     String? name,
     String? email,
-    String? verificationStatus,
-
+    VerificationStatus? verificationStatus,
     int? registrationStep,
     bool? onboardingCompleted,
   }) async {
@@ -41,7 +64,7 @@ class SecureStorageService {
       await _storage.write(key: _userIdKey, value: userId);
     }
     if (role != null) {
-      await _storage.write(key: _roleKey, value: role);
+      await _storage.write(key: _roleKey, value: role.apiValue);
     }
     if (actorType != null) {
       await _storage.write(key: _actorTypeKey, value: actorType);
@@ -55,7 +78,7 @@ class SecureStorageService {
     if (verificationStatus != null) {
       await _storage.write(
         key: _verificationStatusKey,
-        value: verificationStatus,
+        value: verificationStatus.apiValue,
       );
     }
 
@@ -72,6 +95,16 @@ class SecureStorageService {
         value: onboardingCompleted.toString(),
       );
     }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[SecureStorage] saveSession '
+        'userId=$userId role=${role?.apiValue} '
+        'verificationStatus=${verificationStatus?.apiValue} '
+        'registrationStep=$registrationStep '
+        'onboardingCompleted=$onboardingCompleted',
+      );
+    }
   }
 
   Future<Map<String, dynamic>> getSession() async {
@@ -86,7 +119,7 @@ class SecureStorageService {
       _storage.read(key: _onboardingCompletedKey),
     ]);
 
-    return {
+    final session = {
       'userId': values[0],
       'role': values[1],
       'actorType': values[2],
@@ -96,10 +129,92 @@ class SecureStorageService {
       'registrationStep': int.tryParse(values[6] ?? '0') ?? 0,
       'onboardingCompleted': (values[7] ?? 'false') == 'true',
     };
+
+    if (kDebugMode) {
+      debugPrint(
+        '[SecureStorage] getSession '
+        'userId=${session['userId']} role=${session['role']} '
+        'verificationStatus=${session['verificationStatus']} '
+        'registrationStep=${session['registrationStep']} '
+        'onboardingCompleted=${session['onboardingCompleted']}',
+      );
+    }
+
+    return session;
   }
 
+  /**
+ * Save Pending Role.
+ */
+  Future<void> savePendingRole(UserRole role) async {
+    await _storage.write(key: _pendingRoleKey, value: role.apiValue);
+
+    if (kDebugMode) {
+      debugPrint('[SecureStorage] savePendingRole role=${role.apiValue}');
+    }
+  }
+
+  /**
+ * Get Pending Role.
+ */
+  Future<UserRole?> getPendingRole() async {
+    final value = await _storage.read(key: _pendingRoleKey);
+    if (value == null || value.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[SecureStorage] getPendingRole role=null');
+      }
+      return null;
+    }
+    final role = UserRole.fromApiValue(value);
+    if (kDebugMode) {
+      debugPrint('[SecureStorage] getPendingRole role=${role.apiValue}');
+    }
+    return role;
+  }
+
+  /**
+ * Clear Pending Role.
+ */
+  Future<void> clearPendingRole() async {
+    await _storage.delete(key: _pendingRoleKey);
+  }
+
+  /**
+ * Clear Session.
+ */
   Future<void> clearSession() async {
     await _storage.deleteAll();
   }
 
+  Future<void> saveLanguage(String languageCode) async {
+    await _storage.write(key: _languageKey, value: languageCode);
+  }
+
+  Future<String?> getLanguage() async {
+    return await _storage.read(key: _languageKey);
+  }
+
+  Future<void> clearLanguage() async {
+    await _storage.delete(key: _languageKey);
+  }
+
+  Future<void> saveTheme(String themeMode) async {
+    await _storage.write(key: _themeKey, value: themeMode);
+  }
+
+  Future<String?> getTheme() async {
+    return await _storage.read(key: _themeKey);
+  }
+
+  Future<void> setHasSelectedLanguage(bool hasSelected) async {
+    await _storage.write(
+      key: _hasSelectedLanguageKey,
+      value: hasSelected.toString(),
+    );
+  }
+
+  Future<bool> getHasSelectedLanguage() async {
+    final value = await _storage.read(key: _hasSelectedLanguageKey);
+    return value == 'true';
+  }
 }

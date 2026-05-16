@@ -1,3 +1,11 @@
+/**
+ * Module: Pagination Model
+ * Purpose: Implements the Pagination Model module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Pagination Model.
+ */
   class PaginationModel {
   final int page;
   final int limit;

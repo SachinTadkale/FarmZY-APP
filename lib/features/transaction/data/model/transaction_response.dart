@@ -1,6 +1,14 @@
+/**
+ * Module: Transaction Response
+ * Purpose: Implements the Transaction Response module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/features/transaction/data/model/transaction_model.dart';
 import 'package:farmzy/shared/models/pagination_model.dart';
 
+/**
+ * Transaction List Response.
+ */
 class TransactionListResponse {
   final List<TransactionModel> transactions;
   final PaginationModel pagination;

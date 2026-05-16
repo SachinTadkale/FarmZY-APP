@@ -1,5 +1,13 @@
+/**
+ * Module: Activity Model
+ * Purpose: Implements the Activity Model module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/shared/enums/activity_type.dart';
 
+/**
+ * Activity.
+ */
 class Activity {
   final String title;
   final ActivityType type;

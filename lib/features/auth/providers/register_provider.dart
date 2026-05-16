@@ -1,6 +1,14 @@
+/**
+ * Module: Register Provider
+ * Purpose: Implements the Register Provider module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'dart:io';
 import 'package:flutter_riverpod/legacy.dart';
 
+/**
+ * Register State.
+ */
 class RegisterState {
   final int currentStep;
 
@@ -121,25 +129,40 @@ class RegisterState {
   }
 }
 
+/**
+ * Register Notifier.
+ */
 class RegisterNotifier extends StateNotifier<RegisterState> {
   RegisterNotifier() : super(const RegisterState());
 
+/**
+ * Next Step.
+ */
   void nextStep() {
     if (state.currentStep < 4) {
       state = state.copyWith(currentStep: state.currentStep + 1);
     }
   }
 
+/**
+ * Previous Step.
+ */
   void previousStep() {
     if (state.currentStep > 0) {
       state = state.copyWith(currentStep: state.currentStep - 1);
     }
   }
 
+/**
+ * Set Step.
+ */
   void setStep(int step) {
     state = state.copyWith(currentStep: step);
   }
 
+/**
+ * Update Basic Details.
+ */
   void updateBasicDetails({
     String? name,
     String? phone,
@@ -160,6 +183,9 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
     );
   }
 
+/**
+ * Update Farm Details.
+ */
   void updateFarmDetails({
     String? stateName,
     String? district,
@@ -176,6 +202,9 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
     );
   }
 
+/**
+ * Update Bank Details.
+ */
   void updateBankDetails({
     String? accountHolder,
     String? accountNumber,
@@ -192,6 +221,9 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
     );
   }
 
+/**
+ * Update Verification Details.
+ */
   void updateVerificationDetails({
     String? idType,
     String? idNumber,
@@ -212,10 +244,16 @@ class RegisterNotifier extends StateNotifier<RegisterState> {
     );
   }
 
+/**
+ * Set Onboarding Token.
+ */
   void setOnboardingToken(String token) {
     state = state.copyWith(onboardingToken: token);
   }
 
+/**
+ * Reset.
+ */
   void reset() {
     state = const RegisterState();
   }

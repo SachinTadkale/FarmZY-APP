@@ -1,7 +1,15 @@
+/**
+ * Module: Bank Details Step
+ * Purpose: Implements the Bank Details Step module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/**
+ * Bank Details Step.
+ */
 class BankDetailsStep extends ConsumerStatefulWidget {
   const BankDetailsStep({super.key});
 
@@ -9,6 +17,9 @@ class BankDetailsStep extends ConsumerStatefulWidget {
   ConsumerState<BankDetailsStep> createState() => _BankDetailsStepState();
 }
 
+/**
+ * Bank Details Step State.
+ */
 class _BankDetailsStepState extends ConsumerState<BankDetailsStep> {
   static const double _fieldRadius = 12;
 
@@ -28,6 +39,9 @@ class _BankDetailsStepState extends ConsumerState<BankDetailsStep> {
   bool obscureConfirmAccount = true;
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
     final registerState = ref.read(registerProvider);
@@ -40,6 +54,9 @@ class _BankDetailsStepState extends ConsumerState<BankDetailsStep> {
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     holderController.dispose();
     accountController.dispose();
@@ -54,10 +71,16 @@ class _BankDetailsStepState extends ConsumerState<BankDetailsStep> {
     super.dispose();
   }
 
+/**
+ * Next Field.
+ */
   void nextField(FocusNode next) {
     FocusScope.of(context).requestFocus(next);
   }
 
+/**
+ * Update Bank.
+ */
   void _updateBank({
     String? accountHolder,
     String? accountNumber,
@@ -75,6 +98,9 @@ class _BankDetailsStepState extends ConsumerState<BankDetailsStep> {
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final accountMismatch =
         confirmAccountController.text.isNotEmpty &&

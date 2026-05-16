@@ -1,3 +1,11 @@
+/**
+ * Module: Reset Password Request
+ * Purpose: Implements the Reset Password Request module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Reset Password Request.
+ */
 class ResetPasswordRequest {
   final String email;
   final String otp;
@@ -11,6 +19,9 @@ class ResetPasswordRequest {
     required this.confirmPassword,
   });
 
+/**
+ * To Json.
+ */
   Map<String, dynamic> toJson() {
     return {
       'email': email,

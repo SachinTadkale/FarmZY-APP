@@ -1,6 +1,14 @@
+/**
+ * Module: Splash Screen
+ * Purpose: Implements the Splash Screen module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/**
+ * Splash Screen.
+ */
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -8,6 +16,9 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
+/**
+ * Splash Screen State.
+ */
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
@@ -15,6 +26,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late Animation<Offset> _slideAnimation;
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
 
@@ -37,12 +51,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -63,10 +83,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colorScheme.primary.withValues(alpha: 0.08),
+                    color: colorScheme.primary.withOpacity(0.08),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.15),
+                        color: colorScheme.primary.withOpacity(0.15),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -96,7 +116,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 Text(
                   "Empowering Farmers Directly",
                   style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
 

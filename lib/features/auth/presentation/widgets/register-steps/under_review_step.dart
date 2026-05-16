@@ -1,9 +1,20 @@
+/**
+ * Module: Under Review Step
+ * Purpose: Implements the Under Review Step module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter/material.dart';
 
+/**
+ * Under Review Step.
+ */
 class UnderReviewStep extends StatelessWidget {
   const UnderReviewStep({super.key});
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;

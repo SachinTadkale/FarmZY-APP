@@ -1,5 +1,13 @@
+/**
+ * Module: Jwt Parser
+ * Purpose: Implements the Jwt Parser module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'dart:convert';
 
+/**
+ * Jwt Parser.
+ */
 class JwtParser {
   static Map<String, String?> parse(String token) {
     try {

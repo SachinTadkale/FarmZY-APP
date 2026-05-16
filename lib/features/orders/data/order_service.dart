@@ -1,11 +1,22 @@
+/**
+ * Module: Order Service
+ * Purpose: Implements the Order Service module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/orders/data/models/order_model.dart';
 
+/**
+ * Order Service.
+ */
 class OrderService {
   final ApiClient _api;
 
   OrderService(this._api);
 
+/**
+ * Get Farmer Orders.
+ */
   Future<OrderListResponse> getFarmerOrders({
     int page = 1,
     int limit = 30,
@@ -34,6 +45,9 @@ class OrderService {
     return OrderListResponse.fromJson(data);
   }
 
+/**
+ * Get Farmer Order By Id.
+ */
   Future<OrderModel> getFarmerOrderById(String id) async {
     final response = await _api.get('orders/farmer/getFarmerOrderById/$id');
     final data = response.data;
@@ -50,6 +64,9 @@ class OrderService {
     return OrderModel.fromJson(orderJson);
   }
 
+/**
+ * Accept Order.
+ */
   Future<String> acceptOrder(String id) async {
     final response = await _api.patch('orders/farmer/$id/accept');
     final data = response.data;
@@ -59,6 +76,9 @@ class OrderService {
     return 'Order accepted successfully';
   }
 
+/**
+ * Reject Order.
+ */
   Future<String> rejectOrder(String id) async {
     final response = await _api.patch('orders/farmer/$id/reject');
     final data = response.data;

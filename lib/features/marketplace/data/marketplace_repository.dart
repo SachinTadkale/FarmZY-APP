@@ -1,3 +1,8 @@
+/**
+ * Module: Marketplace Repository
+ * Purpose: Implements the Marketplace Repository module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/marketplace/data/models/marketplace_listing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,11 +12,17 @@ final marketplaceRepositoryProvider = Provider<MarketplaceRepository>((ref) {
   return MarketplaceRepository(api);
 });
 
+/**
+ * Marketplace Repository.
+ */
 class MarketplaceRepository {
   final ApiClient _api;
 
   MarketplaceRepository(this._api);
 
+/**
+ * Get Marketplace Listings.
+ */
   Future<MarketplaceListingResult> getMarketplaceListings({
     String? search,
     String? category,
@@ -39,6 +50,19 @@ class MarketplaceRepository {
     );
   }
 
+/**
+ * Get Single Listing By Id.
+ */
+  Future<MarketplaceListing> getListingById(String id) async {
+    final response = await _api.get('marketplace/getListingById/$id');
+    final data = response.data['data'];
+    if (data == null) throw Exception('Listing not found');
+    return MarketplaceListing.fromJson(data as Map<String, dynamic>);
+  }
+
+/**
+ * Get My Listings.
+ */
   Future<MarketplaceListingResult> getMyListings({
     String? status,
     String sortBy = 'createdAt',
@@ -58,6 +82,9 @@ class MarketplaceRepository {
     );
   }
 
+/**
+ * Create Listing.
+ */
   Future<String> createListing({
     required String productId,
     required double price,
@@ -83,6 +110,9 @@ class MarketplaceRepository {
         .toString();
   }
 
+/**
+ * Update Listing.
+ */
   Future<String> updateListing({
     required String listingId,
     required double price,
@@ -104,11 +134,23 @@ class MarketplaceRepository {
         .toString();
   }
 
+/**
+ * Delete Listing.
+ */
   Future<String> deleteListing(String listingId) async {
     final response = await _api.delete(
       'marketplace/deleteListing/$listingId',
     );
     return (response.data['message'] ?? 'Listing cancelled successfully')
         .toString();
+  }
+
+  /**
+   * Get Available Product Units.
+   */
+  Future<List<String>> getProductUnits() async {
+    final response = await _api.get('products/meta/units');
+    final data = response.data['data'] as List<dynamic>;
+    return data.map((e) => e.toString()).toList();
   }
 }

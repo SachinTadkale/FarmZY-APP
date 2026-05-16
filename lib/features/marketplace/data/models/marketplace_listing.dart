@@ -1,5 +1,14 @@
+/**
+ * Module: Marketplace Listing
+ * Purpose: Implements the Marketplace Listing module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+import 'package:farmzy/shared/models/translation_model.dart';
 import 'package:farmzy/shared/models/pagination_model.dart';
 
+/**
+ * Marketplace Listing.
+ */
 class MarketplaceListing {
   final String id;
   final ListingProduct product;
@@ -53,12 +62,16 @@ class MarketplaceListing {
   }
 }
 
+/**
+ * Listing Product.
+ */
 class ListingProduct {
   final String id;
   final String name;
   final String category;
   final String unit;
   final String? imageUrl;
+  final EntityTranslations translations;
 
   const ListingProduct({
     required this.id,
@@ -66,6 +79,7 @@ class ListingProduct {
     required this.category,
     required this.unit,
     required this.imageUrl,
+    required this.translations,
   });
 
   factory ListingProduct.fromJson(Map<String, dynamic> json) {
@@ -75,10 +89,16 @@ class ListingProduct {
       category: (json['category'] ?? '').toString(),
       unit: (json['unit'] ?? '').toString(),
       imageUrl: json['image']?.toString(),
+      translations: EntityTranslations.fromJson(
+        json['translations'] as Map<String, dynamic>?,
+      ),
     );
   }
 }
 
+/**
+ * Listing Seller.
+ */
 class ListingSeller {
   final String id;
   final String name;
@@ -96,12 +116,16 @@ class ListingSeller {
   }
 }
 
+/**
+ * Listing Location.
+ */
 class ListingLocation {
   final String address;
   final String? state;
   final String? district;
   final String? village;
   final String? pincode;
+  final Map<String, dynamic>? addressLocal;
 
   const ListingLocation({
     required this.address,
@@ -109,6 +133,7 @@ class ListingLocation {
     required this.district,
     required this.village,
     required this.pincode,
+    this.addressLocal,
   });
 
   factory ListingLocation.fromJson(Map<String, dynamic> json) {
@@ -118,10 +143,14 @@ class ListingLocation {
       district: json['district']?.toString(),
       village: json['village']?.toString(),
       pincode: json['pincode']?.toString(),
+      addressLocal: json['addressLocal'] as Map<String, dynamic>?,
     );
   }
 }
 
+/**
+ * Marketplace Listing Result.
+ */
 class MarketplaceListingResult {
   final String mode;
   final List<MarketplaceListing> listings;

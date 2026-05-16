@@ -1,3 +1,11 @@
+/**
+ * Module: Farm Request
+ * Purpose: Implements the Farm Request module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Farm Request.
+ */
 class FarmRequest {
   final String state;
   final String district;
@@ -13,6 +21,9 @@ class FarmRequest {
     this.landArea,
   });
 
+/**
+ * To Json.
+ */
   Map<String, dynamic> toJson() {
     return {
       'state': state,

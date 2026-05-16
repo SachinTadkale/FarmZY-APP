@@ -1,6 +1,14 @@
+/**
+ * Module: Activity Ui Mapper
+ * Purpose: Implements the Activity Ui Mapper module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter/material.dart';
 import '../enums/activity_type.dart';
 
+/**
+ * Activity Uimapper.
+ */
 class ActivityUIMapper {
   static IconData getIcon(ActivityType type) {
     switch (type) {

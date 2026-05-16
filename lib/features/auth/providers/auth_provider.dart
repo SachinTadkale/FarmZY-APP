@@ -1,3 +1,8 @@
+/**
+ * Module: Auth Provider
+ * Purpose: Implements the Auth Provider module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';

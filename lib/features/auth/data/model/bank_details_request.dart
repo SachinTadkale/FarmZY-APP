@@ -1,3 +1,11 @@
+/**
+ * Module: Bank Details Request
+ * Purpose: Implements the Bank Details Request module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+/**
+ * Bank Details Request.
+ */
 class BankDetailsRequest {
   final String accountHolder;
   final String accountNumber;
@@ -11,6 +19,9 @@ class BankDetailsRequest {
     required this.ifsc,
   });
 
+/**
+ * To Json.
+ */
   Map<String, dynamic> toJson() {
     return {
       'accountHolder': accountHolder,

@@ -1,8 +1,16 @@
+/**
+ * Module: Farm Details Step
+ * Purpose: Implements the Farm Details Step module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/**
+ * Farm Details Step.
+ */
 class FarmDetailsStep extends ConsumerStatefulWidget {
   const FarmDetailsStep({super.key});
 
@@ -10,6 +18,9 @@ class FarmDetailsStep extends ConsumerStatefulWidget {
   ConsumerState<FarmDetailsStep> createState() => _FarmDetailsStepState();
 }
 
+/**
+ * Farm Details Step State.
+ */
 class _FarmDetailsStepState extends ConsumerState<FarmDetailsStep> {
   static const double _fieldRadius = 12;
 
@@ -26,6 +37,9 @@ class _FarmDetailsStepState extends ConsumerState<FarmDetailsStep> {
   final landFocus = FocusNode();
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
     final registerState = ref.read(registerProvider);
@@ -37,6 +51,9 @@ class _FarmDetailsStepState extends ConsumerState<FarmDetailsStep> {
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     stateController.dispose();
     districtController.dispose();
@@ -51,10 +68,16 @@ class _FarmDetailsStepState extends ConsumerState<FarmDetailsStep> {
     super.dispose();
   }
 
+/**
+ * Next Field.
+ */
   void nextField(FocusNode next) {
     FocusScope.of(context).requestFocus(next);
   }
 
+/**
+ * Update Farm.
+ */
   void _updateFarm({
     String? stateName,
     String? district,
@@ -72,6 +95,9 @@ class _FarmDetailsStepState extends ConsumerState<FarmDetailsStep> {
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primary = theme.colorScheme.primary;

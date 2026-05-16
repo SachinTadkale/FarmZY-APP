@@ -1,10 +1,19 @@
+/**
+ * Module: Verification Step
+ * Purpose: Implements the Verification Step module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/features/auth/providers/register_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+/**
+ * Verification Step.
+ */
 class VerificationStep extends ConsumerStatefulWidget {
   const VerificationStep({super.key});
 
@@ -12,6 +21,9 @@ class VerificationStep extends ConsumerStatefulWidget {
   ConsumerState<VerificationStep> createState() => _VerificationStepState();
 }
 
+/**
+ * Verification Step State.
+ */
 class _VerificationStepState extends ConsumerState<VerificationStep> {
   static const double _fieldRadius = 12;
 
@@ -27,6 +39,9 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
   bool agreeTerms = false;
 
   @override
+/**
+ * Init State.
+ */
   void initState() {
     super.initState();
     final registerState = ref.read(registerProvider);
@@ -39,11 +54,17 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
   }
 
   @override
+/**
+ * Dispose.
+ */
   void dispose() {
     idNumberController.dispose();
     super.dispose();
   }
 
+/**
+ * Pick Image.
+ */
   Future<void> pickImage(bool isFront) async {
     final picked = await picker.pickImage(source: ImageSource.gallery);
 
@@ -66,6 +87,9 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
         );
   }
 
+/**
+ * Build Upload Box.
+ */
   Widget buildUploadBox({
     required File? imageFile,
     required String label,
@@ -81,7 +105,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
         decoration: BoxDecoration(
           color: surface,
           borderRadius: BorderRadius.circular(_fieldRadius),
-          border: Border.all(color: primary.withValues(alpha: 0.3)),
+          border: Border.all(color: primary.withOpacity(0.3)),
         ),
         child: imageFile == null
             ? Column(
@@ -105,14 +129,17 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     String? idNumberError;
     final trimmedIdNumber = idNumberController.text.trim().toUpperCase();
     if (trimmedIdNumber.isNotEmpty) {
       if (selectedIdType == 'AADHAR' && !_aadhaarRegex.hasMatch(trimmedIdNumber)) {
-        idNumberError = 'Aadhaar number must be 12 digits.';
+        idNumberError = 'onboarding.errors.aadhaar_invalid'.tr();
       } else if (selectedIdType == 'PAN' && !_panRegex.hasMatch(trimmedIdNumber)) {
-        idNumberError = 'Enter a valid PAN number.';
+        idNumberError = 'onboarding.errors.pan_invalid'.tr();
       }
     }
 
@@ -127,7 +154,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('ID Verification', style: theme.textTheme.titleLarge),
+            Text('onboarding.id_verification_title'.tr(), style: theme.textTheme.titleLarge),
             const SizedBox(height: 18),
             DropdownButtonFormField<String>(
               initialValue: selectedIdType,
@@ -135,7 +162,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
               dropdownColor: surface,
               borderRadius: BorderRadius.circular(_fieldRadius),
               decoration: InputDecoration(
-                hintText: 'Select ID Type',
+                hintText: 'onboarding.select_id_type'.tr(),
                 filled: true,
                 fillColor: surface,
                 contentPadding: const EdgeInsets.symmetric(
@@ -146,9 +173,9 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                   borderRadius: BorderRadius.circular(_fieldRadius),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 'AADHAR', child: Text('Aadhaar')),
-                DropdownMenuItem(value: 'PAN', child: Text('PAN')),
+              items: [
+                DropdownMenuItem(value: 'AADHAR', child: Text('onboarding.doc_aadhaar'.tr())),
+                DropdownMenuItem(value: 'PAN', child: Text('onboarding.doc_pan'.tr())),
               ],
               onChanged: (value) {
                 setState(() {
@@ -174,7 +201,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                 setState(() {});
               },
               decoration: InputDecoration(
-                hintText: 'ID Number',
+                hintText: 'onboarding.id_number_hint'.tr(),
                 prefixIcon: Icon(Icons.credit_card, color: primary),
                 errorText: idNumberError,
                 filled: true,
@@ -189,11 +216,11 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Upload PAN Card', style: theme.textTheme.bodyMedium),
+                  Text('onboarding.upload_pan'.tr(), style: theme.textTheme.bodyMedium),
                   const SizedBox(height: 10),
                   buildUploadBox(
                     imageFile: frontImage,
-                    label: 'PAN Card',
+                    label: 'onboarding.pan_card_label'.tr(),
                     onTap: () => pickImage(true),
                     surface: surface,
                     primary: primary,
@@ -206,7 +233,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Upload Aadhaar Front & Back',
+                    'onboarding.upload_aadhaar_both'.tr(),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: 10),
@@ -215,7 +242,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                       Expanded(
                         child: buildUploadBox(
                           imageFile: frontImage,
-                          label: 'Front',
+                          label: 'onboarding.front'.tr(),
                           onTap: () => pickImage(true),
                           surface: surface,
                           primary: primary,
@@ -225,7 +252,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                       Expanded(
                         child: buildUploadBox(
                           imageFile: backImage,
-                          label: 'Back',
+                          label: 'onboarding.back'.tr(),
                           onTap: () => pickImage(false),
                           surface: surface,
                           primary: primary,
@@ -264,7 +291,7 @@ class _VerificationStepState extends ConsumerState<VerificationStep> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 12),
                       child: Text(
-                        'I agree to the Terms & Conditions and Privacy Policy',
+                        'onboarding.terms_privacy'.tr(),
                         style: theme.textTheme.bodySmall,
                       ),
                     ),

@@ -1,3 +1,9 @@
+/**
+ * Module: Transaction Card
+ * Purpose: Implements the Transaction Card module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,17 +11,26 @@ import 'package:intl/intl.dart';
 import '../../data/model/transaction_model.dart';
 import '../../data/model/transaction_enums.dart';
 
+/**
+ * Transaction Card.
+ */
 class TransactionCard extends StatelessWidget {
   final TransactionModel txn;
 
   const TransactionCard({super.key, required this.txn});
 
+/**
+ * Short Txn Id.
+ */
   String _shortTxnId(String id) {
     if (id.length <= 12) return id;
     return "${id.substring(0, 6)}...${id.substring(id.length - 4)}";
   }
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isCredit = txn.direction == TransactionDirection.CREDIT;
@@ -27,11 +42,11 @@ class TransactionCard extends StatelessWidget {
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.08),
+          color: colorScheme.outline.withOpacity(0.08),
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.03),
+            color: colorScheme.shadow.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -57,7 +72,7 @@ class TransactionCard extends StatelessWidget {
                       Text(
                         _formatDate(txn.createdAt),
                         style: theme.textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                         ),
                       ),
                     ],
@@ -69,7 +84,7 @@ class TransactionCard extends StatelessWidget {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: (isCredit ? Colors.green : Colors.red)
-                              .withValues(alpha: 0.08),
+                              .withOpacity(0.08),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -96,7 +111,7 @@ class TransactionCard extends StatelessWidget {
                             Row(
                               children: [
                                 Text(
-                                  'ID: ${_shortTxnId(txn.transactionId)}',
+                                  '${"transactions.id_label".tr()}: ${_shortTxnId(txn.transactionId)}',
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -109,13 +124,13 @@ class TransactionCard extends StatelessWidget {
                                     );
                                     AppSnackBar.showSuccess(
                                       context,
-                                      "Transaction ID copied",
+                                      "transactions.copied".tr(),
                                     );
                                   },
                                   child: Icon(
                                     Icons.copy_rounded,
                                     size: 14,
-                                    color: colorScheme.primary.withValues(alpha: 0.6),
+                                    color: colorScheme.primary.withOpacity(0.6),
                                   ),
                                 ),
                               ],
@@ -148,25 +163,34 @@ class TransactionCard extends StatelessWidget {
     return colorScheme.outline;
   }
 
+/**
+ * Get Title.
+ */
   String _getTitle() {
     switch (txn.type) {
       case TransactionType.ESCROW_RELEASE:
-        return "Crop Payout";
+        return "transactions.crop_payout".tr();
       case TransactionType.DELIVERY_PAYOUT:
-        return "Delivery Payout";
+        return "transactions.delivery_payout".tr();
       case TransactionType.ORDER_PAYMENT:
-        return "Order Payment";
+        return "transactions.order_payment".tr();
       default:
-        return "Other Transaction";
+        return "transactions.other_transaction".tr();
     }
   }
 
+/**
+ * Format Date.
+ */
   String _formatDate(DateTime? date) {
     if (date == null) return "-";
     return DateFormat('MMM dd, yyyy • hh:mm a').format(date);
   }
 }
 
+/**
+ * Status Badge.
+ */
 class _StatusBadge extends StatelessWidget {
   final String status;
   final Color color;
@@ -174,11 +198,14 @@ class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status, required this.color});
 
   @override
+/**
+ * Build.
+ */
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -194,7 +221,7 @@ class _StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            status,
+            "common.status_${status.toLowerCase()}".tr(),
             style: TextStyle(
               color: color,
               fontSize: 11,

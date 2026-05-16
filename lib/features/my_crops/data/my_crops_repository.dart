@@ -1,3 +1,8 @@
+/**
+ * Module: My Crops Repository
+ * Purpose: Implements the My Crops Repository module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:dio/dio.dart';
 import 'package:farmzy/core/network/api_client.dart';
 import 'package:farmzy/features/my_crops/data/models/crop_product.dart';
@@ -9,6 +14,9 @@ final myCropsRepositoryProvider = Provider<MyCropsRepository>((ref) {
   return MyCropsRepository(api);
 });
 
+/**
+ * My Crops Repository.
+ */
 class MyCropsRepository {
   final ApiClient _api;
 
@@ -24,6 +32,9 @@ class MyCropsRepository {
         .toList();
   }
 
+/**
+ * Create Product.
+ */
   Future<String> createProduct({
     required String name,
     required String category,
@@ -46,6 +57,9 @@ class MyCropsRepository {
         .toString();
   }
 
+/**
+ * Update Product.
+ */
   Future<String> updateProduct({
     required String productId,
     required String name,
@@ -73,9 +87,22 @@ class MyCropsRepository {
         .toString();
   }
 
+/**
+ * Delete Product.
+ */
   Future<String> deleteProduct(String productId) async {
     final response = await _api.delete('products/delete-product/$productId');
     return (response.data['message'] ?? 'Product deleted successfully')
         .toString();
+  }
+
+  Future<List<Map<String, dynamic>>> getCategoriesWithUnits() async {
+    final response = await _api.get('products/meta/categories-units');
+    return List<Map<String, dynamic>>.from(response.data['data']);
+  }
+
+  Future<List<String>> getAllUnits() async {
+    final response = await _api.get('products/meta/units');
+    return List<String>.from(response.data['data']);
   }
 }

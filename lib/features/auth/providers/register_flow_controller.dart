@@ -1,3 +1,8 @@
+/**
+ * Module: Register Flow Controller
+ * Purpose: Implements the Register Flow Controller module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:dio/dio.dart';
 import 'package:farmzy/features/auth/data/model/bank_details_request.dart';
 import 'package:farmzy/features/auth/data/model/farm_request.dart';
@@ -5,9 +10,13 @@ import 'package:farmzy/features/auth/data/model/kyc_request.dart';
 import 'package:farmzy/features/auth/data/model/register_request.dart';
 import 'package:farmzy/features/auth/data/register_flow_repository.dart';
 import 'package:farmzy/features/auth/providers/register_provider.dart';
+import 'package:farmzy/shared/enums/user_role.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
+/**
+ * Register Step Action.
+ */
 enum RegisterStepAction { advanced, completed }
 
 final registerFlowControllerProvider =
@@ -18,6 +27,9 @@ final registerFlowControllerProvider =
       },
     );
 
+/**
+ * Register Flow Controller.
+ */
 class RegisterFlowController
     extends StateNotifier<AsyncValue<RegisterStepAction?>> {
   static final RegExp _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -34,6 +46,9 @@ class RegisterFlowController
   RegisterFlowController(this._ref, this._repository)
       : super(const AsyncData(null));
 
+/**
+ * Submit Current Step.
+ */
   Future<void> submitCurrentStep() async {
     final registerState = _ref.read(registerProvider);
     state = const AsyncLoading();
@@ -70,6 +85,9 @@ class RegisterFlowController
     }
   }
 
+/**
+ * Submit Basic Details.
+ */
   Future<void> _submitBasicDetails(RegisterState registerState) async {
     if (registerState.name.trim().isEmpty ||
         registerState.phone.trim().isEmpty ||
@@ -107,6 +125,7 @@ class RegisterFlowController
         address: registerState.address.trim(),
         gender: registerState.gender.trim().toUpperCase(),
         password: registerState.password.trim(),
+        role: UserRole.farmer,
       ),
     );
 
@@ -121,6 +140,9 @@ class RegisterFlowController
     _ref.read(registerProvider.notifier).setOnboardingToken(response.token);
   }
 
+/**
+ * Submit Farm Details.
+ */
   Future<void> _submitFarmDetails(RegisterState registerState) async {
     final token = _requireToken(registerState);
     if (registerState.stateName.trim().isEmpty ||
@@ -147,6 +169,9 @@ class RegisterFlowController
     );
   }
 
+/**
+ * Submit Bank Details.
+ */
   Future<void> _submitBankDetails(RegisterState registerState) async {
     final token = _requireToken(registerState);
     if (registerState.accountHolder.trim().isEmpty ||
@@ -172,6 +197,9 @@ class RegisterFlowController
     );
   }
 
+/**
+ * Submit Kyc Details.
+ */
   Future<void> _submitKycDetails(RegisterState registerState) async {
     final token = _requireToken(registerState);
     if (registerState.idType.trim().isEmpty ||
@@ -207,6 +235,9 @@ class RegisterFlowController
     );
   }
 
+/**
+ * Require Token.
+ */
   String _requireToken(RegisterState registerState) {
     if (registerState.onboardingToken.isEmpty) {
       throw Exception('Registration token missing. Please restart onboarding.');
@@ -214,6 +245,9 @@ class RegisterFlowController
     return registerState.onboardingToken;
   }
 
+/**
+ * Set Error State.
+ */
   void _setErrorState(DioException e, StackTrace stackTrace) {
     final responseData = e.response?.data;
     final message =

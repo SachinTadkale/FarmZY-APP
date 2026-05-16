@@ -1,3 +1,8 @@
+/**
+ * Module: Transaction Controller
+ * Purpose: Implements the Transaction Controller module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:farmzy/features/transaction/data/transaction_repository.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -9,6 +14,9 @@ final transactionStatusProvider = StateProvider<String?>((ref) => null);
 final transactionSortProvider = StateProvider<String>((ref) => "desc");
 
 /// 🔹 Filter
+/**
+ * Transaction Filter.
+ */
 enum TransactionFilter {
   earnings, // CREDIT
   expenses, // DEBIT (future)

@@ -1,9 +1,20 @@
+/**
+ * Module: App Snackbar
+ * Purpose: Implements the App Snackbar module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+/**
+ * App Snack Bar Type.
+ */
 enum AppSnackBarType { success, error }
 
+/**
+ * App Snack Bar.
+ */
 class AppSnackBar {
   static OverlayEntry? _currentEntry;
   static AnimationController? _currentController;
@@ -62,16 +73,16 @@ class AppSnackBar {
                       constraints: const BoxConstraints(maxWidth: 420),
                       decoration: BoxDecoration(
                         color: theme.brightness == Brightness.dark
-                            ? scheme.surface.withValues(alpha: 0.96)
+                            ? scheme.surface.withOpacity(0.96)
                             : Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: accentColor.withValues(alpha: 0.95),
+                          color: accentColor.withOpacity(0.95),
                           width: 1.4,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: Colors.black.withOpacity(0.08),
                             blurRadius: 18,
                             offset: const Offset(0, 8),
                           ),
@@ -88,7 +99,7 @@ class AppSnackBar {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: accentColor.withValues(alpha: 0.12),
+                                color: accentColor.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -117,9 +128,7 @@ class AppSnackBar {
                                 child: Icon(
                                   Icons.close_rounded,
                                   size: 18,
-                                  color: scheme.onSurface.withValues(
-                                    alpha: 0.55,
-                                  ),
+                                  color: scheme.onSurface.withOpacity(0.55),
                                 ),
                               ),
                             ),

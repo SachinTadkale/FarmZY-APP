@@ -1,5 +1,13 @@
+/**
+ * Module: Transaction Model
+ * Purpose: Implements the Transaction Model module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
 import 'transaction_enums.dart';
 
+/**
+ * Transaction Model.
+ */
 class TransactionModel {
   final String transactionId;
   final String? orderId;

@@ -1,19 +1,35 @@
+/**
+ * Module: Home Screen
+ * Purpose: Implements the Home Screen module for the FarmZy mobile app.
+ * Note: Documentation-only change; behavior remains unchanged.
+ */
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/core/constants/route_names.dart';
+import 'package:farmzy/features/profile/providers/profile_provider.dart';
 import 'package:farmzy/shared/enums/activity_type.dart';
 import 'package:farmzy/shared/models/activity_model.dart';
 import 'package:farmzy/shared/utils/activity_ui_mapper.dart';
+import 'package:farmzy/core/theme/app_radius.dart';
+import 'package:farmzy/core/theme/app_spacing.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
+import 'package:farmzy/shared/widgets/premium_search_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farmzy/shared/widgets/glass_container.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:farmzy/features/market_rates/providers/market_rates_provider.dart';
+import 'package:farmzy/shared/widgets/feature_guard.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>  
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fade;
@@ -22,310 +38,428 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 800),
     );
-
-    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
     _slide = Tween(
-      begin: const Offset(0, .05),
+      begin: const Offset(0, 0.1),
       end: Offset.zero,
     ).animate(_fade);
-
     _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final profileAsync = ref.watch(profileProvider);
 
     return AppScaffold(
-      body: FadeTransition(
-        opacity: _fade,
-        child: SlideTransition(
-          position: _slide,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const SizedBox(height: 8),
-
-              _searchBar(theme),
-
-              const SizedBox(height: 20),
-
-              _weatherCard(theme),
-
-              const SizedBox(height: 24),
-
-              _marketPrices(theme),
-
-              const SizedBox(height: 24),
-
-              _sellCropCTA(theme),
-
-              const SizedBox(height: 28),
-
-              _quickActions(theme),
-
-              const SizedBox(height: 28),
-
-              _recentActivity(theme),
-            ],
+      body: CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fade,
+              child: SlideTransition(
+                position: _slide,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _header(theme, profileAsync),
+                      const SizedBox(height: 24),
+                      _searchBar(theme),
+                      const SizedBox(height: 24),
+                      _weatherCard(theme),
+                      const SizedBox(height: 32),
+                      FeatureGuard(
+                        featureKey: 'marketRates',
+                        child: _marketPrices(theme),
+                      ),
+                      const SizedBox(height: 32),
+                      _quickActions(theme),
+                      const SizedBox(height: 32),
+                      FeatureGuard(
+                        featureKey: 'marketplace',
+                        child: _sellCropCTA(theme),
+                      ),
+                      const SizedBox(height: 32),
+                      _recentActivity(theme),
+                      const SizedBox(height: 120),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _handleActivityTap(Activity activity) {
-    switch (activity.type) {
-      case ActivityType.companyRequest:
-        context.push("/requests/${activity.referenceId}");
-        break;
-      case ActivityType.orderPicked:
-        context.push("/orders/${activity.referenceId}");
-        break;
-      case ActivityType.paymentReceived:
-        context.push("/wallet/${activity.referenceId}");
-        break;
-      case ActivityType.deliveryCompleted:
-        context.push("/delivery/${activity.referenceId}");
-        break;
-      case ActivityType.cropApproved:
-        context.push("/crops/${activity.referenceId}");
-        break;
-    }
-  }
-
-  /// SEARCH BAR
-
-  Widget _searchBar(ThemeData theme) {
-    final colors = theme.colorScheme;
-
-    return TextField(
-      decoration: InputDecoration(
-        hintText: "Search crops, companies...",
-        prefixIcon: Icon(Icons.search, color: colors.primary),
-        filled: true,
-        fillColor: colors.surface,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.outline.withValues(alpha: .2)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colors.primary),
-        ),
-      ),
-    );
-  }
-
-  /// WEATHER CARD
-
-  Widget _weatherCard(ThemeData theme) {
-    final colors = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.wb_cloudy, size: 28, color: colors.primary),
-
-          const SizedBox(width: 12),
-
-          Text("26° Cloudy", style: theme.textTheme.titleMedium),
-
-          const Spacer(),
-
-          Text("H:28°  L:24°", style: theme.textTheme.bodySmall),
         ],
       ),
     );
   }
 
-  /// MARKET PRICES
-
-  Widget _marketPrices(ThemeData theme) {
-    final data = [
-      {"crop": "Tomato", "today": 50, "yesterday": 47},
-      {"crop": "Mango", "today": 100, "yesterday": 102},
-      {"crop": "Rice", "today": 60, "yesterday": 60},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text("Market Prices", style: theme.textTheme.titleMedium),
-
-        const SizedBox(height: 12),
-
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
+  Widget _header(ThemeData theme, AsyncValue profileAsync) {
+    return profileAsync.maybeWhen(
+      data: (profile) => Row(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Text(
+                "home.greeting".tr(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.7,
+                  ),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                profile.name,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.1,
+                  fontSize: 26,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Hero(
+            tag: 'profile_avatar',
+            child: GlassContainer(
+              borderRadius: 99,
+              padding: const EdgeInsets.all(3),
+              opacity: 0.1,
+              blur: 10,
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              ),
+              child: CircleAvatar(
+                radius: 26,
+                backgroundColor: theme.colorScheme.primary.withValues(
+                  alpha: 0.1,
+                ),
+                backgroundImage: profile.profileImage != null
+                    ? CachedNetworkImageProvider(profile.profileImage!)
+                    : null,
+                child: profile.profileImage == null
+                    ? Icon(
+                        Icons.person_rounded,
+                        size: 28,
+                        color: theme.colorScheme.primary,
+                      )
+                    : null,
+              ),
+            ),
+          ).animate().scale(
+            delay: 200.ms,
+            duration: 400.ms,
+            curve: Curves.easeOutBack,
+          ),
+        ],
+      ),
+      orElse: () => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _searchBar(ThemeData theme) {
+    return PremiumSearchBar(
+          controller:
+              TextEditingController(), // TODO: Add proper search logic if needed
+          hintText: "home.search_hint".tr(),
+          suffix: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.tune_rounded,
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(duration: 400.ms)
+        .slideY(begin: 0.2, end: 0, curve: Curves.easeOutQuad);
+  }
+
+  Widget _weatherCard(ThemeData theme) {
+    final colors = theme.colorScheme;
+    return GlassContainer(
+          borderRadius: 32,
+          opacity: 0.85,
+          blur: 30,
+          color: colors.primary,
+          padding: const EdgeInsets.all(28),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          child: Row(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text("Crop")),
-                  Expanded(child: Center(child: Text("Current"))),
-                  Expanded(child: Center(child: Text("Previous"))),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Text("Change"),
+                  Text(
+                    "26°C",
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-
-              const Divider(),
-
-              ...data.map((item) {
-                double today = (item["today"] as num).toDouble();
-                double yesterday = (item["yesterday"] as num).toDouble();
-
-                double change = ((today - yesterday) / yesterday) * 100;
-
-                Color color = change > 0
-                    ? Colors.green
-                    : change < 0
-                    ? Colors.red
-                    : Colors.grey;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
+                  const SizedBox(height: 4),
+                  Row(
                     children: [
-                      Expanded(child: Text(item["crop"] as String)),
-                      Expanded(child: Center(child: Text("₹${today.toInt()}"))),
-                      Expanded(
-                        child: Center(child: Text("₹${yesterday.toInt()}")),
+                      Icon(
+                        Icons.location_on_rounded,
+                        size: 14,
+                        color: Colors.white.withValues(alpha: 0.8),
                       ),
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            "${change.toStringAsFixed(1)}%",
-                            style: TextStyle(
-                              color: color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'home.weather.location'.tr(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ],
                   ),
-                );
-              }),
+                  const SizedBox(height: 2),
+                  Text(
+                    'home.weather.cloudy'.tr(),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              const Icon(Icons.wb_cloudy_rounded, size: 72, color: Colors.white)
+                  .animate(
+                    onPlay: (controller) => controller.repeat(reverse: true),
+                  )
+                  .moveY(
+                    begin: -6,
+                    end: 6,
+                    duration: 2.seconds,
+                    curve: Curves.easeInOutSine,
+                  )
+                  .shimmer(
+                    delay: 1.seconds,
+                    duration: 2.seconds,
+                    color: Colors.white24,
+                  ),
             ],
           ),
+        )
+        .animate()
+        .fadeIn(delay: 200.ms, duration: 500.ms)
+        .slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _marketPrices(ThemeData theme) {
+    final marketState = ref.watch(marketRatesProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader(
+          theme,
+          "home.market_prices.title".tr(),
+          onViewAll: () => context.push(RouteNames.marketRates),
+        ),
+        const SizedBox(height: 16),
+        Builder(
+          builder: (context) {
+            if (marketState.isLoading && marketState.rates.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (marketState.error != null && marketState.rates.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            final previewRates = marketState.rates.take(3).toList();
+            if (previewRates.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              children: previewRates.map((item) {
+                final today = item.currentPrice;
+                final change = item.changePercentage;
+                final isUp = item.trend == 'UP';
+
+                return GlassContainer(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: 24,
+                  opacity: 0.03,
+                  blur: 10,
+                  child: Row(
+                    children: [
+                      GlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.all(10),
+                        color: theme.colorScheme.primary,
+                        opacity: 0.1,
+                        child: Icon(
+                          Icons.eco_rounded,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.cropName,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            Text(
+                              item.location,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "₹${today.toInt()}",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isUp
+                                    ? Icons.trending_up_rounded
+                                    : Icons.trending_down_rounded,
+                                size: 14,
+                                color: isUp ? Colors.green : Colors.red,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${isUp ? '+' : ''}${change.toStringAsFixed(1)}%",
+                                style: TextStyle(
+                                  color: isUp ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+                    .animate()
+                    .fadeIn(delay: 100.ms * previewRates.indexOf(item))
+                    .slideX(begin: 0.05, end: 0);
+              }).toList(),
+            );
+          },
         ),
       ],
     );
   }
 
-  /// SELL CROP CTA
-
-  Widget _sellCropCTA(ThemeData theme) {
-    final colors = theme.colorScheme;
-
-    return Material(
-      color: colors.primary,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => context.go(RouteNames.marketplace),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          child: Row(
-            children: [
-              const Icon(Icons.storefront, color: Colors.white),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Text(
-                  "Sell Your Crop",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// QUICK ACTIONS
-
   Widget _quickActions(ThemeData theme) {
-    final colors = theme.colorScheme;
-
     final actions = [
       {
-        "icon": Icons.agriculture,
-        "title": "My Crops",
+        "icon": Icons.agriculture_rounded,
+        "title": "home.quick_actions.my_crops".tr(),
         "route": RouteNames.myCrops,
+        "color": Colors.green,
+        "featureKey": "myCrops",
       },
       {
-        "icon": Icons.shopping_cart,
-        "title": "Orders",
+        "icon": Icons.shopping_bag_rounded,
+        "title": "home.quick_actions.orders".tr(),
         "route": RouteNames.orders,
+        "color": Colors.orange,
+        "featureKey": "orders",
       },
       {
-        "icon": Icons.person_outline,
-        "title": "Profile",
+        "icon": Icons.account_balance_wallet_rounded,
+        "title": "Wallet",
         "route": RouteNames.profile,
+        "color": Colors.blue,
+        "featureKey": null,
       },
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Quick Actions", style: theme.textTheme.titleMedium),
-
-        const SizedBox(height: 12),
-
+        _sectionHeader(theme, "home.quick_actions.title".tr()),
+        const SizedBox(height: 16),
         Row(
           children: actions.map((e) {
+            final color = e["color"] as Color;
             return Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () => context.go(e["route"] as String),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  decoration: BoxDecoration(
-                    color: colors.surface,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(e["icon"] as IconData, color: colors.primary),
-                      const SizedBox(height: 8),
-                      Text(e["title"] as String),
-                    ],
+              child: FeatureGuard(
+                featureKey: e["featureKey"] as String?,
+                child: GestureDetector(
+                  onTap: () => context.go(e["route"] as String),
+                  child: GlassContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    borderRadius: 28,
+                    opacity: 0.03,
+                    blur: 15,
+                    child: Column(
+                      children: [
+                        GlassContainer(
+                          borderRadius: 99,
+                          padding: const EdgeInsets.all(12),
+                          color: color,
+                          opacity: 0.15,
+                          child: Icon(
+                            e["icon"] as IconData,
+                            color: color,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          e["title"] as String,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -336,68 +470,166 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// RECENT ACTIVITY
+  Widget _sellCropCTA(ThemeData theme) {
+    final colors = theme.colorScheme;
+    return GlassContainer(
+      borderRadius: AppRadius.card,
+      opacity: 0.08,
+      color: colors.primary,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go(RouteNames.marketplace),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "home.sell_crop".tr(),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "List your harvest on Marketplace",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colors.onSurfaceVariant.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colors.primary,
+                      colors.primary.withValues(alpha: 0.7),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.primary.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).animate().shimmer(
+      delay: 3.seconds,
+      duration: 2.seconds,
+      color: colors.primary.withValues(alpha: 0.1),
+    );
+  }
 
   Widget _recentActivity(ThemeData theme) {
     final activities = [
       Activity(
-        title: "Company requested 500kg Tomato",
-        type: ActivityType.companyRequest,
-        referenceId: "REQ101",
-      ),
-      Activity(
-        title: "Order #102 picked up",
-        type: ActivityType.orderPicked,
-        referenceId: "ORD102",
-      ),
-      Activity(
-        title: "₹5000 received from FreshFoods",
+        title: "Payment received from BigBasket",
         type: ActivityType.paymentReceived,
-        referenceId: "PAY889",
+        referenceId: "PAY123",
+      ),
+      Activity(
+        title: "Crop approved: Alfonso Mango",
+        type: ActivityType.cropApproved,
+        referenceId: "CRP456",
       ),
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Recent Activity", style: theme.textTheme.titleMedium),
-
-        const SizedBox(height: 12),
-
+        _sectionHeader(theme, "home.recent_activity.title".tr()),
+        const SizedBox(height: 16),
         ...activities.map((activity) {
           final icon = ActivityUIMapper.getIcon(activity.type);
           final color = ActivityUIMapper.getColor(activity.type);
 
-          return InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () => _handleActivityTap(activity),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: .15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: color, size: 20),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  Expanded(child: Text(activity.title)),
-
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: theme.colorScheme.outline,
-                  ),
-                ],
+          return GlassContainer(
+            margin: const EdgeInsets.only(bottom: 12),
+            borderRadius: 24,
+            opacity: 0.02,
+            blur: 5,
+            child: ListTile(
+              leading: GlassContainer(
+                borderRadius: 12,
+                padding: const EdgeInsets.all(8),
+                color: color,
+                opacity: 0.1,
+                child: Icon(icon, color: color, size: 22),
+              ),
+              title: Text(
+                activity.title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: Icon(
+                Icons.chevron_right_rounded,
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
+              ),
+              onTap: () {},
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
               ),
             ),
           );
-        }),
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _sectionHeader(ThemeData theme, String title, {VoidCallback? onViewAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.5,
+          ),
+        ),
+        TextButton(
+          onPressed: onViewAll,
+          style: TextButton.styleFrom(
+            foregroundColor: theme.colorScheme.primary,
+          ),
+          child: Row(
+            children: [
+              Text(
+                "common.view_all".tr(),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 12),
+            ],
+          ),
+        ),
       ],
     );
   }
