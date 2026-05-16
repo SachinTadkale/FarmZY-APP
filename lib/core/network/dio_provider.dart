@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:farmzy/core/config/app_config.dart';
 import 'package:farmzy/core/network/auth_interceptor.dart';
 import 'package:farmzy/core/network/lang_interceptor.dart';
+import 'package:farmzy/core/network/maintenance_interceptor.dart';
 import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:farmzy/features/auth/providers/role_selection_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,6 +67,9 @@ final dioProvider = Provider<Dio>((ref) {
 
   // Language Interceptor
   dio.interceptors.add(LangInterceptor(ref));
+
+  // Maintenance Interceptor (must be last — runs after auth/lang interceptors)
+  dio.interceptors.add(MaintenanceInterceptor(ref));
 
   return dio;
 });

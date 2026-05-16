@@ -156,7 +156,26 @@
     "no_my_listings": "You haven't listed any crops yet",
     "error_load": "Failed to load marketplace",
     "marketplace_tab": "Marketplace",
-    "my_listings_tab": "My Listings"
+    "my_listings_tab": "My Listings",
+    "available_quantity": "Available Quantity",
+    "min_order": "Minimum Order",
+    "seller_details": "Seller Details",
+    "description": "Product Description"
+  },
+  "market_rates": {
+    "title": "Market Rates",
+    "search_hint": "Search crops or mandis...",
+    "trending": "Trending Now",
+    "gainers": "Top Price Gainers",
+    "losers": "Recent Price Drops",
+    "all_markets": "All Market Rates",
+    "high": "High Demand",
+    "medium": "Stable Demand",
+    "low": "Low Demand",
+    "nearby": "Nearby Market Rates",
+    "variety": "Variety",
+    "unit": "Unit",
+    "error_load": "Failed to load market rates"
   },
   "home": {
     "greeting": "Namaste,",
@@ -318,10 +337,26 @@
     "vehicle_truck": "Truck",
     "vehicle_heavy_truck": "Heavy Truck"
   },
-  "v_pending": {
-    "title": "Verification Pending",
-    "subtitle": "We are reviewing your documents. You will be notified once your account is verified. This usually takes 24-48 hours.",
-    "refresh": "Check Status",
-    "logout": "Sign Out"
-  }
+  "v_pending_title": "Verification Pending",
+  "v_pending_subtitle": "We are reviewing your documents. You will be notified once your account is verified. This usually takes 24-48 hours.",
+  "v_pending_refresh": "Check Status",
+  "v_pending_logout": "Sign Out",
+  "maint_title": "System Enhancement",
+  "maint_subtitle": "We're improving FarmZY services to provide a better farming marketplace experience.",
+  "maint_status_label": "Current Status",
+  "maint_status_value": "Maintenance in Progress",
+  "maint_status_read_only": "Platform in Read-Only Mode",
+  "maint_affected_label": "Service Impact",
+  "maint_affected_value": "All marketplace modules are temporarily offline for optimization.",
+  "maint_affected_writes": "New listings and orders are temporarily disabled.",
+  "maint_return_label": "Estimated Return",
+  "maint_return_value": "~30 Minutes",
+  "maint_system_status": "Admin Systems Operational",
+  "maint_retry_hint": "Thank you for your patience during this upgrade.",
+  "maint_retry_button": "Retry Connection",
+  "feature_unavailable_disabled_title": "{} Unavailable",
+  "feature_unavailable_disabled_subtitle": "This feature is temporarily disabled for maintenance. We are working hard to bring it back soon.",
+  "feature_unavailable_coming_soon_title": "{} is Coming Soon",
+  "feature_unavailable_coming_soon_subtitle": "We are building this feature with care. Stay tuned for updates!",
+  "feature_unavailable_back_to_home": "Back to Home"
 }

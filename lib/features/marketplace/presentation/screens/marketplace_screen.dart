@@ -14,7 +14,6 @@ import 'package:farmzy/shared/widgets/app_button.dart';
 import 'package:farmzy/shared/widgets/app_text_field.dart';
 import 'package:farmzy/shared/widgets/app_dropdown.dart';
 import 'package:farmzy/shared/widgets/app_side_panel.dart';
-import 'package:farmzy/shared/widgets/app_bottom_sheet.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
 import 'package:farmzy/core/theme/app_radius.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +23,7 @@ import 'package:farmzy/shared/widgets/premium_search_bar.dart';
 import 'package:farmzy/shared/widgets/premium_filter_popup.dart';
 import 'package:farmzy/shared/widgets/premium_tab_switcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 
 class MarketplaceScreen extends ConsumerStatefulWidget {
   const MarketplaceScreen({super.key});
@@ -119,13 +119,13 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen>
               children: [
                 _ListingPane(
                   listingsAsync: marketAsync,
-                  isReference: true,
                   emptyMessage: 'marketplace.no_listings'.tr(),
+                  onActionPressed: (listing) =>
+                      context.push('/marketplace/${listing.id}'),
                   onRetry: () => ref.refresh(marketplaceListingsProvider),
                 ),
                 _ListingPane(
                   listingsAsync: myListingsAsync,
-                  isReference: false,
                   emptyMessage: 'marketplace.no_my_listings'.tr(),
                   onActionPressed: (listing) =>
                       _showManageListingPanel(context, ref, listing),
@@ -292,7 +292,6 @@ class _ListingFormPanelState extends ConsumerState<_ListingFormPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final isEdit = widget.listing != null;
 
     return Column(
@@ -422,14 +421,12 @@ class _ListingFormPanelState extends ConsumerState<_ListingFormPanel> {
 class _ListingPane extends StatelessWidget {
   final AsyncValue<MarketplaceListingResult> listingsAsync;
   final String emptyMessage;
-  final bool isReference;
   final void Function(MarketplaceListing listing)? onActionPressed;
   final VoidCallback onRetry;
 
   const _ListingPane({
     required this.listingsAsync,
     required this.emptyMessage,
-    required this.isReference,
     this.onActionPressed,
     required this.onRetry,
   });
@@ -441,7 +438,7 @@ class _ListingPane extends StatelessWidget {
         if (result.listings.isEmpty) {
           return AppEmptyState(
             icon: Icons.storefront_rounded,
-            title: isReference ? 'No listings found' : 'No listings yet',
+            title: 'No listings found',
             subtitle: emptyMessage,
           );
         }
@@ -452,26 +449,17 @@ class _ListingPane extends StatelessWidget {
           itemBuilder: (context, index) =>
               _ListingCard(
                     listing: result.listings[index],
-                    isReference: isReference,
-                    onTap: isReference
-                        ? null
-                        : () => onActionPressed?.call(result.listings[index]),
+                    onTap: () => onActionPressed?.call(result.listings[index]),
                   )
                   .animate()
                   .fadeIn(delay: (index * 100).ms)
                   .slideY(begin: 0.1, end: 0),
         );
       },
-      loading: () => ListView.separated(
+      loading: () => AppShimmer.list(
+        height: 220,
+        borderRadius: 32,
         padding: const EdgeInsets.all(20),
-        itemCount: 5,
-        separatorBuilder: (_, __) => const SizedBox(height: 20),
-        itemBuilder: (context, index) => const AppShimmer.rectangular(
-          height: 220,
-          shapeBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(32)),
-          ),
-        ),
       ),
       error: (e, s) => AppErrorState(
         title: 'marketplace.error_load'.tr(),
@@ -484,14 +472,9 @@ class _ListingPane extends StatelessWidget {
 
 class _ListingCard extends StatelessWidget {
   final MarketplaceListing listing;
-  final bool isReference;
   final VoidCallback? onTap;
 
-  const _ListingCard({
-    required this.listing,
-    required this.isReference,
-    this.onTap,
-  });
+  const _ListingCard({required this.listing, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -638,24 +621,51 @@ class _ListingCard extends StatelessWidget {
   }
 
   Widget _sellerInfo(ThemeData theme, MarketplaceListing listing) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.location_on_rounded,
-          size: 14,
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            listing.location.district ?? listing.location.state ?? "Unknown",
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontWeight: FontWeight.w500,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+        Row(
+          children: [
+            Icon(
+              Icons.person_rounded,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+            const SizedBox(width: 4),
+            Text(
+              listing.seller.name,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Icon(
+              Icons.location_on_rounded,
+              size: 14,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                listing.location.district ??
+                    listing.location.state ??
+                    "Unknown",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.7,
+                  ),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ],
     );

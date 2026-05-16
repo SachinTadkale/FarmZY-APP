@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:farmzy/shared/widgets/app_text_field.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
-import 'package:farmzy/core/theme/app_radius.dart';
 import 'kyc_upload_box.dart';
 
 class KycDocumentCard extends StatelessWidget {

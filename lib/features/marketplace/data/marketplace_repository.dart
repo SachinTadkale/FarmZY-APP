@@ -51,6 +51,16 @@ class MarketplaceRepository {
   }
 
 /**
+ * Get Single Listing By Id.
+ */
+  Future<MarketplaceListing> getListingById(String id) async {
+    final response = await _api.get('marketplace/getListingById/$id');
+    final data = response.data['data'];
+    if (data == null) throw Exception('Listing not found');
+    return MarketplaceListing.fromJson(data as Map<String, dynamic>);
+  }
+
+/**
  * Get My Listings.
  */
   Future<MarketplaceListingResult> getMyListings({

@@ -6,6 +6,7 @@ import 'package:farmzy/core/theme/app_radius.dart';
 import 'package:farmzy/features/auth/providers/auth_controller.dart';
 import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
+import 'package:farmzy/shared/widgets/feature_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,41 +60,55 @@ class AppDrawer extends ConsumerWidget {
                           onTap: () =>
                               _navigate(context, RouteNames.farmerHome),
                         ),
-                        _DrawerItem(
-                          icon: Icons.store_outlined,
-                          activeIcon: Icons.store_rounded,
-                          title: 'navigation.marketplace'.tr(),
-                          onTap: () =>
-                              _navigate(context, RouteNames.marketplace),
-                        ),
-                        _DrawerItem(
-                          icon: Icons.shopping_bag_outlined,
-                          activeIcon: Icons.shopping_bag_rounded,
-                          title: 'navigation.orders'.tr(),
-                          onTap: () => _navigate(context, RouteNames.orders),
-                        ),
-                        _DrawerItem(
-                          icon: Icons.smart_toy_outlined,
-                          activeIcon: Icons.smart_toy_rounded,
-                          title: 'navigation.ai'.tr(),
-                          onTap: () => _navigate(
-                            context,
-                            RouteNames.aiChat,
-                            isPush: true,
+                        FeatureGuard(
+                          featureKey: 'marketplace',
+                          child: _DrawerItem(
+                            icon: Icons.store_outlined,
+                            activeIcon: Icons.store_rounded,
+                            title: 'navigation.marketplace'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.marketplace),
                           ),
-                          isAIPowered: true,
+                        ),
+                        FeatureGuard(
+                          featureKey: 'orders',
+                          child: _DrawerItem(
+                            icon: Icons.shopping_bag_outlined,
+                            activeIcon: Icons.shopping_bag_rounded,
+                            title: 'navigation.orders'.tr(),
+                            onTap: () => _navigate(context, RouteNames.orders),
+                          ),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'ai',
+                          fallbackMode: FeatureGuardMode.disable,
+                          child: _DrawerItem(
+                            icon: Icons.smart_toy_outlined,
+                            activeIcon: Icons.smart_toy_rounded,
+                            title: 'navigation.ai'.tr(),
+                            onTap: () => _navigate(
+                              context,
+                              RouteNames.aiChat,
+                              isPush: true,
+                            ),
+                            isAIPowered: true,
+                          ),
                         ),
 
                         const SizedBox(height: AppSpacing.xl),
 
                         _SectionLabel(label: 'navigation.explore'.tr()),
                         const SizedBox(height: AppSpacing.sm),
-                        _DrawerItem(
-                          icon: Icons.article_outlined,
-                          activeIcon: Icons.article_rounded,
-                          title: 'navigation.news'.tr(),
-                          onTap: () =>
-                              _navigate(context, RouteNames.news, isPush: true),
+                        FeatureGuard(
+                          featureKey: 'news',
+                          fallbackMode: FeatureGuardMode.disable,
+                          child: _DrawerItem(
+                            icon: Icons.article_outlined,
+                            activeIcon: Icons.article_rounded,
+                            title: 'navigation.news'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.news, isPush: true),
+                          ),
                         ),
                         _DrawerItem(
                           icon: Icons.help_outline_rounded,
@@ -101,6 +116,19 @@ class AppDrawer extends ConsumerWidget {
                           title: 'navigation.help'.tr(),
                           onTap: () =>
                               _navigate(context, RouteNames.help, isPush: true),
+                        ),
+                        FeatureGuard(
+                          featureKey: 'marketRates',
+                          child: _DrawerItem(
+                            icon: Icons.analytics_outlined,
+                            activeIcon: Icons.analytics_rounded,
+                            title: 'market_rates.title'.tr(),
+                            onTap: () => _navigate(
+                              context,
+                              RouteNames.marketRates,
+                              isPush: true,
+                            ),
+                          ),
                         ),
 
                         const SizedBox(height: AppSpacing.xl),

@@ -1,3 +1,4 @@
+import 'package:farmzy/core/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -21,6 +22,26 @@ class AppShimmer extends StatelessWidget {
     required this.height,
     this.shapeBorder = const CircleBorder(),
   });
+
+  static Widget list({
+    int itemCount = 6,
+    double height = 120,
+    double borderRadius = 28,
+    EdgeInsets padding = const EdgeInsets.all(AppSpacing.lg),
+  }) {
+    return ListView.separated(
+      padding: padding,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: itemCount,
+      separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.md),
+      itemBuilder: (_, __) => AppShimmer.rectangular(
+        height: height,
+        shapeBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

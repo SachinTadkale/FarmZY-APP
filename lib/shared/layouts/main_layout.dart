@@ -12,6 +12,7 @@ import 'package:farmzy/shared/widgets/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farmzy/features/settings/providers/app_config_provider.dart';
 
 import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,19 +31,27 @@ class MainLayout extends ConsumerWidget {
     final role = ref.watch(authControllerProvider.select((state) => state.role));
     final location = GoRouterState.of(context).uri.path;
 
-    final items = role == UserRole.deliveryPartner
+    final appConfig = ref.watch(appConfigProvider).config;
+
+    final allItems = role == UserRole.deliveryPartner
         ? [
             _NavDestination(RouteNames.deliveryHome, Icons.home_outlined, Icons.home, 'navigation.home'.tr()),
-            _NavDestination(RouteNames.deliveryJobs, Icons.work_outline, Icons.work, 'navigation.jobs'.tr()),
-            _NavDestination(RouteNames.deliveryDeliveries, Icons.local_shipping_outlined, Icons.local_shipping, 'navigation.active'.tr()),
+            _NavDestination(RouteNames.deliveryJobs, Icons.work_outline, Icons.work, 'navigation.jobs'.tr(), featureKey: 'delivery'),
+            _NavDestination(RouteNames.deliveryDeliveries, Icons.local_shipping_outlined, Icons.local_shipping, 'navigation.active'.tr(), featureKey: 'delivery'),
             _NavDestination(RouteNames.profile, Icons.person_outline, Icons.person, 'navigation.profile'.tr()),
           ]
         : [
             _NavDestination(RouteNames.farmerHome, Icons.home_outlined, Icons.home, 'navigation.home'.tr()),
-            _NavDestination(RouteNames.marketplace, Icons.store_outlined, Icons.store, 'navigation.marketplace'.tr()),
-            _NavDestination(RouteNames.orders, Icons.shopping_cart_outlined, Icons.shopping_cart, 'navigation.orders'.tr()),
+            _NavDestination(RouteNames.marketplace, Icons.store_outlined, Icons.store, 'navigation.marketplace'.tr(), featureKey: 'marketplace'),
+            _NavDestination(RouteNames.orders, Icons.shopping_cart_outlined, Icons.shopping_cart, 'navigation.orders'.tr(), featureKey: 'orders'),
             _NavDestination(RouteNames.profile, Icons.person_outline, Icons.person, 'navigation.profile'.tr()),
           ];
+
+    // Filter items based on backend-driven visibility
+    final items = allItems.where((item) {
+      if (item.featureKey == null) return true;
+      return appConfig.isVisible(item.featureKey!);
+    }).toList();
 
     final currentIndex = items.indexWhere((item) => location.startsWith(item.path));
     final selectedIndex = currentIndex == -1 ? 0 : currentIndex;
@@ -146,11 +155,13 @@ class _NavDestination {
   final IconData icon;
   final IconData activeIcon;
   final String label;
+  final String? featureKey;
 
   const _NavDestination(
     this.path,
     this.icon,
     this.activeIcon,
-    this.label,
-  );
+    this.label, {
+    this.featureKey,
+  });
 }

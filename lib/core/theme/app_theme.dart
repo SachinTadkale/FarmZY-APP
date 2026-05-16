@@ -5,14 +5,14 @@ import 'package:farmzy/shared/enums/user_role.dart';
 class AppTheme {
   static ThemeData getTheme(UserRole role) {
     return switch (role) {
-      UserRole.farmer => _theme(Brightness.light, AppColors.primaryFarmer),
+      UserRole.farmer || UserRole.admin || UserRole.owner => _theme(Brightness.light, AppColors.primaryFarmer),
       UserRole.deliveryPartner => _theme(Brightness.light, AppColors.primaryDelivery),
     };
   }
 
   static ThemeData getDarkTheme(UserRole role) {
     return switch (role) {
-      UserRole.farmer => _theme(Brightness.dark, AppColors.primaryFarmerLight),
+      UserRole.farmer || UserRole.admin || UserRole.owner => _theme(Brightness.dark, AppColors.primaryFarmerLight),
       UserRole.deliveryPartner => _theme(Brightness.dark, AppColors.primaryDeliveryLight),
     };
   }

@@ -6,7 +6,6 @@ import 'package:farmzy/features/auth/providers/role_selection_provider.dart';
 import 'package:farmzy/shared/enums/user_role.dart';
 import 'package:farmzy/shared/widgets/auth_page_scaffold.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
-import 'package:farmzy/core/theme/app_radius.dart';
 import 'package:farmzy/core/theme/app_animations.dart';
 import 'package:farmzy/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +39,7 @@ class RoleSelectionScreen extends ConsumerWidget {
             text: 'common.continue'.tr(),
             onPressed: () {
               final route = switch (selectedRole) {
-                UserRole.farmer => RouteNames.farmerRegister,
+                UserRole.farmer || UserRole.admin || UserRole.owner => RouteNames.farmerRegister,
                 UserRole.deliveryPartner => RouteNames.deliveryRegister,
               };
               context.go(route);

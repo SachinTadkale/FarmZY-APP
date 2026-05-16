@@ -106,6 +106,11 @@ final marketplaceListingsProvider =
           );
     });
 
+final listingDetailProvider =
+    FutureProvider.family<MarketplaceListing, String>((ref, id) async {
+  return ref.read(marketplaceRepositoryProvider).getListingById(id);
+});
+
 final myListingsProvider = FutureProvider<MarketplaceListingResult>((ref) async {
   ref.watch(marketplaceRefreshProvider);
   final filters = ref.watch(myListingFilterProvider);

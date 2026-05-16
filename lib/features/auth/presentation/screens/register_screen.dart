@@ -10,7 +10,6 @@ import 'package:farmzy/shared/enums/user_role.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:farmzy/shared/widgets/auth_page_scaffold.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
-import 'package:farmzy/core/theme/app_radius.dart';
 import 'package:farmzy/core/theme/app_animations.dart';
 import 'package:farmzy/shared/widgets/app_button.dart';
 import 'package:flutter/material.dart';
@@ -91,16 +90,23 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       AppSnackBar.showError(context, 'auth.register.errors.name_required'.tr());
       return false;
     }
-    if (_emailController.text.trim().isEmpty || !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$').hasMatch(_emailController.text.trim())) {
+    if (_emailController.text.trim().isEmpty ||
+        !RegExp(
+          r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+        ).hasMatch(_emailController.text.trim())) {
       AppSnackBar.showError(context, 'auth.register.errors.email_invalid'.tr());
       return false;
     }
-    if (_phoneController.text.trim().isEmpty || !RegExp(r'^\d{10}$').hasMatch(_phoneController.text.trim())) {
+    if (_phoneController.text.trim().isEmpty ||
+        !RegExp(r'^\d{10}$').hasMatch(_phoneController.text.trim())) {
       AppSnackBar.showError(context, 'auth.register.errors.phone_invalid'.tr());
       return false;
     }
     if (_selectedGender == null) {
-      AppSnackBar.showError(context, 'auth.register.errors.gender_required'.tr());
+      AppSnackBar.showError(
+        context,
+        'auth.register.errors.gender_required'.tr(),
+      );
       return false;
     }
     return true;
@@ -110,12 +116,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    if (password.isEmpty || !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$').hasMatch(password)) {
+    if (password.isEmpty ||
+        !RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$').hasMatch(password)) {
       AppSnackBar.showError(context, 'auth.register.errors.password_weak'.tr());
       return false;
     }
     if (confirmPassword != password) {
-      AppSnackBar.showError(context, 'auth.register.errors.password_mismatch'.tr());
+      AppSnackBar.showError(
+        context,
+        'auth.register.errors.password_mismatch'.tr(),
+      );
       return false;
     }
     return true;
@@ -123,7 +133,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _handleRegister(UserRole role) async {
     if (!_validateStep2()) return;
-    await ref.read(authControllerProvider.notifier).register(
+    await ref
+        .read(authControllerProvider.notifier)
+        .register(
           name: _nameController.text.trim(),
           email: _emailController.text.trim(),
           phone: _phoneController.text.trim(),
@@ -162,10 +174,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Expanded(
             flex: 2,
             child: AppButton(
-              text: _currentStep == 1 ? 'auth.register.create_account'.tr() : 'auth.register.next'.tr(),
+              text: _currentStep == 1
+                  ? 'auth.register.create_account'.tr()
+                  : 'auth.register.next'.tr(),
               isLoading: auth.isLoading,
-              icon: _currentStep == 1 ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
-              onPressed: () => _currentStep == 1 ? _handleRegister(role) : _nextStep(),
+              icon: _currentStep == 1
+                  ? Icons.check_circle_rounded
+                  : Icons.arrow_forward_rounded,
+              onPressed: () =>
+                  _currentStep == 1 ? _handleRegister(role) : _nextStep(),
             ),
           ),
         ],
@@ -182,17 +199,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               subtitle: 'auth.register.subtitle'.tr(),
             ),
           ),
-          
+
           const SizedBox(height: 32),
 
           Expanded(
             child: PageView(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildStep1(theme),
-                _buildStep2(theme, role),
-              ],
+              children: [_buildStep1(theme), _buildStep2(theme, role)],
             ),
           ),
         ],
@@ -258,12 +272,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               builder: (context, constraints) {
                 return Row(
                   children: [
-                    _buildGenderItem('MALE', 'auth.register.male'.tr(), Icons.male_rounded),
+                    _buildGenderItem(
+                      'MALE',
+                      'auth.register.male'.tr(),
+                      Icons.male_rounded,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
-                    _buildGenderItem('FEMALE', 'auth.register.female'.tr(), Icons.female_rounded),
+                    _buildGenderItem(
+                      'FEMALE',
+                      'auth.register.female'.tr(),
+                      Icons.female_rounded,
+                    ),
                   ],
                 );
-              }
+              },
             ),
           ],
         ),
@@ -324,7 +346,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               "By creating an account, you agree to our Terms of Service and Privacy Policy.",
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.6,
+                ),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -346,7 +370,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           duration: AppAnimations.normal,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? primary.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+            color: isSelected
+                ? primary.withValues(alpha: 0.1)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? primary : Colors.white.withValues(alpha: 0.1),
@@ -355,12 +381,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           child: Column(
             children: [
-              Icon(icon, color: isSelected ? primary : theme.colorScheme.onSurfaceVariant, size: 24),
+              Icon(
+                icon,
+                color: isSelected
+                    ? primary
+                    : theme.colorScheme.onSurfaceVariant,
+                size: 24,
+              ),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: isSelected ? primary : theme.colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? primary
+                      : theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w900,
                 ),
               ),

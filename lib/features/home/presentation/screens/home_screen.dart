@@ -19,6 +19,8 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:farmzy/features/market_rates/providers/market_rates_provider.dart';
+import 'package:farmzy/shared/widgets/feature_guard.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -78,11 +80,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       const SizedBox(height: 24),
                       _weatherCard(theme),
                       const SizedBox(height: 32),
-                      _marketPrices(theme),
+                      FeatureGuard(
+                        featureKey: 'marketRates',
+                        child: _marketPrices(theme),
+                      ),
                       const SizedBox(height: 32),
                       _quickActions(theme),
                       const SizedBox(height: 32),
-                      _sellCropCTA(theme),
+                      FeatureGuard(
+                        featureKey: 'marketplace',
+                        child: _sellCropCTA(theme),
+                      ),
                       const SizedBox(height: 32),
                       _recentActivity(theme),
                       const SizedBox(height: 120),
@@ -268,103 +276,118 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _marketPrices(ThemeData theme) {
-    final data = [
-      {"crop": "Tomato", "today": 52, "yesterday": 48},
-      {"crop": "Wheat", "today": 2400, "yesterday": 2350},
-      {"crop": "Onion", "today": 35, "yesterday": 38},
-    ];
+    final marketState = ref.watch(marketRatesProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(theme, "home.market_prices.title".tr()),
+        _sectionHeader(
+          theme,
+          "home.market_prices.title".tr(),
+          onViewAll: () => context.push(RouteNames.marketRates),
+        ),
         const SizedBox(height: 16),
-        ...data.map((item) {
-          final today = item["today"] as num;
-          final yesterday = item["yesterday"] as num;
-          final change = ((today - yesterday) / yesterday) * 100;
-          final isUp = change >= 0;
+        Builder(
+          builder: (context) {
+            if (marketState.isLoading && marketState.rates.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (marketState.error != null && marketState.rates.isEmpty) {
+              return const SizedBox.shrink();
+            }
 
-          return GlassContainer(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                borderRadius: 24,
-                opacity: 0.03,
-                blur: 10,
-                child: Row(
-                  children: [
-                    GlassContainer(
-                      borderRadius: 16,
-                      padding: const EdgeInsets.all(10),
-                      color: theme.colorScheme.primary,
-                      opacity: 0.1,
-                      child: Icon(
-                        Icons.eco_rounded,
+            final previewRates = marketState.rates.take(3).toList();
+            if (previewRates.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              children: previewRates.map((item) {
+                final today = item.currentPrice;
+                final change = item.changePercentage;
+                final isUp = item.trend == 'UP';
+
+                return GlassContainer(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  borderRadius: 24,
+                  opacity: 0.03,
+                  blur: 10,
+                  child: Row(
+                    children: [
+                      GlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.all(10),
                         color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item["crop"] as String,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          Text(
-                            "Per Quintal",
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          "₹$today",
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: theme.colorScheme.primary,
-                          ),
+                        opacity: 0.1,
+                        child: Icon(
+                          Icons.eco_rounded,
+                          color: theme.colorScheme.primary,
+                          size: 24,
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              isUp
-                                  ? Icons.trending_up_rounded
-                                  : Icons.trending_down_rounded,
-                              size: 14,
-                              color: isUp ? Colors.green : Colors.red,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
-                              "${change.toStringAsFixed(1)}%",
-                              style: TextStyle(
-                                color: isUp ? Colors.green : Colors.red,
+                              item.cropName,
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                fontSize: 12,
+                              ),
+                            ),
+                            Text(
+                              item.location,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.6),
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              )
-              .animate()
-              .fadeIn(delay: 100.ms * data.indexOf(item))
-              .slideX(begin: 0.05, end: 0);
-        }).toList(),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "₹${today.toInt()}",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isUp
+                                    ? Icons.trending_up_rounded
+                                    : Icons.trending_down_rounded,
+                                size: 14,
+                                color: isUp ? Colors.green : Colors.red,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${isUp ? '+' : ''}${change.toStringAsFixed(1)}%",
+                                style: TextStyle(
+                                  color: isUp ? Colors.green : Colors.red,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                )
+                    .animate()
+                    .fadeIn(delay: 100.ms * previewRates.indexOf(item))
+                    .slideX(begin: 0.05, end: 0);
+              }).toList(),
+            );
+          },
+        ),
       ],
     );
   }
@@ -376,18 +399,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         "title": "home.quick_actions.my_crops".tr(),
         "route": RouteNames.myCrops,
         "color": Colors.green,
+        "featureKey": "myCrops",
       },
       {
         "icon": Icons.shopping_bag_rounded,
         "title": "home.quick_actions.orders".tr(),
         "route": RouteNames.orders,
         "color": Colors.orange,
+        "featureKey": "orders",
       },
       {
         "icon": Icons.account_balance_wallet_rounded,
         "title": "Wallet",
         "route": RouteNames.profile,
         "color": Colors.blue,
+        "featureKey": null,
       },
     ];
 
@@ -400,37 +426,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: actions.map((e) {
             final color = e["color"] as Color;
             return Expanded(
-              child: GestureDetector(
-                onTap: () => context.go(e["route"] as String),
-                child: GlassContainer(
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  borderRadius: 28,
-                  opacity: 0.03,
-                  blur: 15,
-                  child: Column(
-                    children: [
-                      GlassContainer(
-                        borderRadius: 99,
-                        padding: const EdgeInsets.all(12),
-                        color: color,
-                        opacity: 0.15,
-                        child: Icon(
-                          e["icon"] as IconData,
+              child: FeatureGuard(
+                featureKey: e["featureKey"] as String?,
+                child: GestureDetector(
+                  onTap: () => context.go(e["route"] as String),
+                  child: GlassContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    borderRadius: 28,
+                    opacity: 0.03,
+                    blur: 15,
+                    child: Column(
+                      children: [
+                        GlassContainer(
+                          borderRadius: 99,
+                          padding: const EdgeInsets.all(12),
                           color: color,
-                          size: 28,
+                          opacity: 0.15,
+                          child: Icon(
+                            e["icon"] as IconData,
+                            color: color,
+                            size: 28,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        e["title"] as String,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                        const SizedBox(height: 14),
+                        Text(
+                          e["title"] as String,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -574,7 +603,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _sectionHeader(ThemeData theme, String title) {
+  Widget _sectionHeader(ThemeData theme, String title, {VoidCallback? onViewAll}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -586,7 +615,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: onViewAll,
           style: TextButton.styleFrom(
             foregroundColor: theme.colorScheme.primary,
           ),

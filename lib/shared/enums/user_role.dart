@@ -1,25 +1,23 @@
-/**
- * Module: User Role
- * Purpose: Implements the User Role module for the FarmZy mobile app.
- * Note: Documentation-only change; behavior remains unchanged.
- */
 import 'package:easy_localization/easy_localization.dart';
 
-/**
- * User Role.
- */
 enum UserRole {
   farmer,
-  deliveryPartner;
+  deliveryPartner,
+  admin,
+  owner;
 
   String get apiValue => switch (this) {
         UserRole.farmer => 'FARMER',
         UserRole.deliveryPartner => 'DELIVERY_PARTNER',
+        UserRole.admin => 'ADMIN',
+        UserRole.owner => 'OWNER',
       };
 
   String get translationKey => switch (this) {
         UserRole.farmer => 'role.farmer',
         UserRole.deliveryPartner => 'role.delivery',
+        UserRole.admin => 'role.admin',
+        UserRole.owner => 'role.owner',
       };
 
   String get displayName => translationKey.tr();
@@ -30,6 +28,8 @@ enum UserRole {
     final normalized = value?.trim().toUpperCase();
     return switch (normalized) {
       'DELIVERY_PARTNER' || 'DELIVERYPARTNER' || 'PARTNER' => UserRole.deliveryPartner,
+      'ADMIN' => UserRole.admin,
+      'OWNER' => UserRole.owner,
       'FARMER' => UserRole.farmer,
       _ => UserRole.farmer,
     };

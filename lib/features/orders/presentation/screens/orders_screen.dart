@@ -4,6 +4,7 @@ import 'package:farmzy/features/orders/presentation/widgets/order_card.dart';
 import 'package:farmzy/features/orders/providers/orders_controller.dart';
 import 'package:farmzy/shared/widgets/app_async_state.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
+import 'package:farmzy/shared/widgets/app_shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/shared/widgets/premium_search_bar.dart';
 import 'package:flutter/material.dart';
@@ -99,18 +100,10 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                   ),
                 );
               },
-              loading: () => ListView.separated(
+              loading: () => AppShimmer.list(
+                height: 120,
+                borderRadius: 28,
                 padding: const EdgeInsets.all(20),
-                itemCount: 6,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 16),
-                itemBuilder: (context, index) => const GlassContainer(
-                  borderRadius: 28,
-                  opacity: 0.05,
-                  blur: 10,
-                  height: 120,
-                  child: SizedBox.expand(),
-                ),
               ),
               error: (error, _) => AppErrorState(
                 error: error,

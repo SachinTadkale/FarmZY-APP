@@ -416,7 +416,7 @@ class AuthController extends StateNotifier<AuthState> {
       _ref.read(selectedRoleProvider.notifier).state = role;
       return;
     } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
+      if (e.response?.statusCode == 401 || e.response?.statusCode == 404) {
         await logout();
         state = state.copyWith(isInitialized: true, isLoading: false);
         return;

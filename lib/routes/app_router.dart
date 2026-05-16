@@ -1,5 +1,3 @@
-/// Module: App Router
-/// Purpose: Controls authenticated navigation, onboarding resume flow, and role-based shell routes.
 import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:farmzy/features/auth/presentation/screens/language_selection_screen.dart';
@@ -19,7 +17,11 @@ import 'package:farmzy/features/ai/presentation/screens/ai_screen.dart';
 import 'package:farmzy/features/news/presentation/screens/news_screen.dart';
 import 'package:farmzy/features/help/presentation/screens/help_screen.dart';
 import 'package:farmzy/features/home/presentation/screens/home_screen.dart';
+import 'package:farmzy/features/maintenance/presentation/screens/maintenance_screen.dart';
+import 'package:farmzy/features/maintenance/providers/maintenance_provider.dart';
 import 'package:farmzy/features/marketplace/presentation/screens/marketplace_screen.dart';
+import 'package:farmzy/features/marketplace/presentation/screens/listing_detail_screen.dart';
+import 'package:farmzy/features/market_rates/presentation/screens/market_rates_screen.dart';
 import 'package:farmzy/features/my_crops/presentation/screens/my_crops_screen.dart';
 import 'package:farmzy/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:farmzy/features/orders/presentation/screens/orders_screen.dart';
@@ -28,11 +30,13 @@ import 'package:farmzy/features/profile/presentation/screens/profile_qr_screen.d
 import 'package:farmzy/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farmzy/features/splash/presentation/splash_screen.dart';
 import 'package:farmzy/features/transaction/presentation/screens/transaction_history_screen.dart';
+import 'package:farmzy/features/profile/data/models/farmer_profile.dart';
 import 'package:farmzy/shared/enums/user_role.dart';
 import 'package:farmzy/shared/layouts/main_layout.dart';
-import 'package:farmzy/features/profile/data/models/farmer_profile.dart';
-import 'package:flutter/material.dart';
+import 'package:farmzy/shared/widgets/feature_unavailable_screen.dart';
+import 'package:farmzy/features/settings/providers/app_config_provider.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -53,12 +57,83 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     }
   });
 
+  // Maintenance state notifier — used to trigger router refresh
+  final maintenanceNotifier = ValueNotifier<MaintenanceState>(
+    ref.read(maintenanceProvider),
+  );
+  ref.listen<MaintenanceState>(maintenanceProvider, (_, next) {
+    maintenanceNotifier.value = next;
+  });
+
+  // App Config notifier — used to trigger router refresh when flags change
+  final appConfigNotifier = ValueNotifier<AppConfigState>(
+    ref.read(appConfigProvider),
+  );
+  ref.listen<AppConfigState>(appConfigProvider, (_, next) {
+    appConfigNotifier.value = next;
+  });
+
   return GoRouter(
     initialLocation: RouteNames.splash,
-    refreshListenable: authNotifier,
+    refreshListenable: Listenable.merge([
+      authNotifier,
+      maintenanceNotifier,
+      appConfigNotifier,
+    ]),
     redirect: (context, state) {
-      final authState = authNotifier.value;
       final currentPath = state.uri.path;
+      
+      // 1. ABSOLUTE PRIORITY: Maintenance
+      final maintenanceState = ref.read(maintenanceProvider);
+      if (maintenanceState.isInMaintenance || maintenanceState.isReadOnly) {
+        if (kDebugMode) debugPrint('🚩 ROUTER: Maintenance Mode Active. Current: $currentPath');
+        if (currentPath != RouteNames.maintenance) return RouteNames.maintenance;
+        return null;
+      }
+
+      // 2. ABSOLUTE PRIORITY: Return from Maintenance
+      final appConfigState = ref.read(appConfigProvider);
+      if (currentPath == RouteNames.maintenance) {
+        if (!maintenanceState.isInMaintenance && !appConfigState.config.maintenanceMode) {
+          if (kDebugMode) debugPrint('🚩 ROUTER: Maintenance Over. Redirecting to Splash');
+          return RouteNames.splash;
+        }
+        return null;
+      }
+
+      // 3. INITIALIZATION GUARD
+      final authState = ref.read(authControllerProvider);
+      if (!appConfigState.isInitialized || !authState.isInitialized) {
+        if (kDebugMode) {
+          debugPrint('🚩 ROUTER: Waiting for Init... Config: ${appConfigState.isInitialized}, Auth: ${authState.isInitialized}');
+        }
+        return currentPath == RouteNames.splash ? null : RouteNames.splash;
+      }
+
+      // 4. FEATURE GUARDS
+      final appConfig = appConfigState.config;
+      final featureRoutes = {
+        RouteNames.marketplace: 'marketplace',
+        RouteNames.orders:      'orders',
+        RouteNames.marketRates: 'marketRates',
+        RouteNames.aiChat:      'ai',
+        RouteNames.news:        'news',
+      };
+
+      for (final entry in featureRoutes.entries) {
+        if (currentPath.startsWith(entry.key)) {
+          final fKey = entry.value;
+          if (!appConfig.isVisible(fKey) || !appConfig.isEnabled(fKey)) {
+            final name = fKey[0].toUpperCase() + fKey.substring(1);
+            final isSoon = appConfig.isVisible(fKey) && !appConfig.isEnabled(fKey);
+            return '/feature-unavailable?name=$name&soon=$isSoon';
+          }
+        }
+      }
+
+      if (currentPath == '/feature-unavailable') return null;
+
+      // 5. PUBLIC ROUTES
       final isPublicRoute = <String>{
         RouteNames.languageSelection,
         RouteNames.roleSelection,
@@ -70,10 +145,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         RouteNames.otpVerification,
         RouteNames.resetPassword,
       }.contains(currentPath);
-
-      if (!authState.isInitialized) {
-        return currentPath == RouteNames.splash ? null : RouteNames.splash;
-      }
 
       if (!authState.hasToken) {
         if (currentPath == RouteNames.splash) {
@@ -112,6 +183,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 currentPath == RouteNames.languageSelection
           : currentPath == RouteNames.farmerHome ||
                 currentPath == RouteNames.marketplace ||
+                currentPath.startsWith('/marketplace/') ||
+                currentPath == RouteNames.marketRates ||
                 currentPath == RouteNames.myCrops ||
                 currentPath == RouteNames.orders ||
                 currentPath.startsWith('/orders/') ||
@@ -131,6 +204,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/feature-unavailable',
+        builder: (context, state) {
+          final name = state.uri.queryParameters['name'] ?? 'Feature';
+          final isSoon = state.uri.queryParameters['soon'] == 'true';
+          return FeatureUnavailableScreen(featureName: name, isComingSoon: isSoon);
+        },
+      ),
+      GoRoute(
+        path: RouteNames.maintenance,
+        builder: (context, state) => const MaintenanceScreen(),
+      ),
       GoRoute(
         path: RouteNames.splash,
         builder: (context, state) => const SplashScreen(),
@@ -218,6 +303,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.marketplace,
             builder: (context, state) => const MarketplaceScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.listingDetail,
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              return ListingDetailScreen(listingId: id);
+            },
+          ),
+          GoRoute(
+            path: RouteNames.marketRates,
+            builder: (context, state) => const MarketRatesScreen(),
           ),
           GoRoute(
             path: RouteNames.myCrops,

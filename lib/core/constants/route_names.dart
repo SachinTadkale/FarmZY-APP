@@ -37,11 +37,14 @@ class RouteNames {
   static const aiChat = '/ai-chat';
   static const news = '/news';
   static const help = '/help';
+  static const marketRates = '/market-rates';
+  static const listingDetail = '/marketplace/:id';
+  static const maintenance = '/maintenance';
 
   static String homeForRole(UserRole role) {
     return switch (role) {
       UserRole.deliveryPartner => deliveryHome,
-      UserRole.farmer => farmerHome,
+      UserRole.farmer || UserRole.admin || UserRole.owner => farmerHome,
     };
   }
 }
