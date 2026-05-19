@@ -52,7 +52,7 @@ class MarketRateCard extends StatelessWidget {
       child: GlassContainer(
         borderRadius: 24,
         opacity: 0.05,
-        blur: 20,
+        blur: 0,
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,9 +244,10 @@ class _DemandBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = level == 'HIGH'
+    final normalizedLevel = level.toUpperCase();
+    final color = normalizedLevel == 'HIGH'
         ? Colors.orangeAccent
-        : level == 'MEDIUM'
+        : normalizedLevel == 'MEDIUM'
             ? Colors.blueAccent
             : Colors.grey;
 
@@ -258,7 +259,7 @@ class _DemandBadge extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
       child: Text(
-        level.tr(),
+        'market_rates.${level.toLowerCase()}'.tr(),
         style: theme.textTheme.labelSmall?.copyWith(
           color: color,
           fontWeight: FontWeight.w900,

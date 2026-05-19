@@ -4,6 +4,7 @@ import 'package:farmzy/core/constants/route_names.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
 import 'package:farmzy/core/theme/app_radius.dart';
 import 'package:farmzy/features/auth/providers/auth_controller.dart';
+import 'package:farmzy/shared/enums/user_role.dart';
 import 'package:farmzy/shared/widgets/glass_container.dart';
 import 'package:farmzy/shared/widgets/app_snackbar.dart';
 import 'package:farmzy/shared/widgets/feature_guard.dart';
@@ -19,6 +20,8 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final authState = ref.watch(authControllerProvider);
+    final isDelivery = authState.role == UserRole.deliveryPartner;
 
     return Container(
       width: MediaQuery.of(context).size.width * 1,
@@ -26,11 +29,15 @@ class AppDrawer extends ConsumerWidget {
       decoration: BoxDecoration(color: colors.surface.withValues(alpha: 0.1)),
       child: Stack(
         children: [
-          // Glass Backdrop
+          // Modern Dark Backdrop Overlay (Lag-Free with Light Blur)
           Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-              child: Container(color: Colors.transparent),
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.35),
+                ),
+              ),
             ),
           ),
 
@@ -51,100 +58,177 @@ class AppDrawer extends ConsumerWidget {
                       children: [
                         const SizedBox(height: AppSpacing.xl),
 
-                        _SectionLabel(label: 'navigation.main'.tr()),
-                        const SizedBox(height: AppSpacing.sm),
-                        _DrawerItem(
-                          icon: Icons.home_outlined,
-                          activeIcon: Icons.home_rounded,
-                          title: 'navigation.home'.tr(),
-                          onTap: () =>
-                              _navigate(context, RouteNames.farmerHome),
-                        ),
-                        FeatureGuard(
-                          featureKey: 'marketplace',
-                          child: _DrawerItem(
-                            icon: Icons.store_outlined,
-                            activeIcon: Icons.store_rounded,
-                            title: 'navigation.marketplace'.tr(),
+                        if (isDelivery) ...[
+                          _SectionLabel(label: 'navigation.main'.tr()),
+                          const SizedBox(height: AppSpacing.sm),
+                          _DrawerItem(
+                            icon: Icons.dashboard_outlined,
+                            activeIcon: Icons.dashboard_rounded,
+                            title: 'navigation.home'.tr(),
                             onTap: () =>
-                                _navigate(context, RouteNames.marketplace),
+                                _navigate(context, RouteNames.deliveryHome),
                           ),
-                        ),
-                        FeatureGuard(
-                          featureKey: 'orders',
-                          child: _DrawerItem(
-                            icon: Icons.shopping_bag_outlined,
-                            activeIcon: Icons.shopping_bag_rounded,
-                            title: 'navigation.orders'.tr(),
-                            onTap: () => _navigate(context, RouteNames.orders),
+                          _DrawerItem(
+                            icon: Icons.local_shipping_outlined,
+                            activeIcon: Icons.local_shipping_rounded,
+                            title: 'navigation.jobs'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.deliveryJobs),
                           ),
-                        ),
-                        FeatureGuard(
-                          featureKey: 'ai',
-                          fallbackMode: FeatureGuardMode.disable,
-                          child: _DrawerItem(
-                            icon: Icons.smart_toy_outlined,
-                            activeIcon: Icons.smart_toy_rounded,
-                            title: 'navigation.ai'.tr(),
-                            onTap: () => _navigate(
-                              context,
-                              RouteNames.aiChat,
-                              isPush: true,
+                          _DrawerItem(
+                            icon: Icons.assignment_outlined,
+                            activeIcon: Icons.assignment_rounded,
+                            title: 'navigation.active'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.deliveryDeliveries),
+                          ),
+                          _DrawerItem(
+                            icon: Icons.account_balance_wallet_outlined,
+                            activeIcon: Icons.account_balance_wallet_rounded,
+                            title: 'Wallet & Earnings',
+                            onTap: () =>
+                                _navigate(context, RouteNames.deliveryWallet, isPush: true),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'ai',
+                            fallbackMode: FeatureGuardMode.disable,
+                            child: _DrawerItem(
+                              icon: Icons.smart_toy_outlined,
+                              activeIcon: Icons.smart_toy_rounded,
+                              title: 'navigation.ai'.tr(),
+                              onTap: () => _navigate(
+                                context,
+                                RouteNames.aiChat,
+                                isPush: true,
+                              ),
+                              isAIPowered: true,
                             ),
-                            isAIPowered: true,
                           ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        _SectionLabel(label: 'navigation.explore'.tr()),
-                        const SizedBox(height: AppSpacing.sm),
-                        FeatureGuard(
-                          featureKey: 'news',
-                          fallbackMode: FeatureGuardMode.disable,
-                          child: _DrawerItem(
-                            icon: Icons.article_outlined,
-                            activeIcon: Icons.article_rounded,
-                            title: 'navigation.news'.tr(),
-                            onTap: () =>
-                                _navigate(context, RouteNames.news, isPush: true),
-                          ),
-                        ),
-                        _DrawerItem(
-                          icon: Icons.help_outline_rounded,
-                          activeIcon: Icons.help_rounded,
-                          title: 'navigation.help'.tr(),
-                          onTap: () =>
-                              _navigate(context, RouteNames.help, isPush: true),
-                        ),
-                        FeatureGuard(
-                          featureKey: 'marketRates',
-                          child: _DrawerItem(
-                            icon: Icons.analytics_outlined,
-                            activeIcon: Icons.analytics_rounded,
-                            title: 'market_rates.title'.tr(),
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionLabel(label: 'navigation.settings'.tr()),
+                          const SizedBox(height: AppSpacing.sm),
+                          _DrawerItem(
+                            icon: Icons.settings_outlined,
+                            activeIcon: Icons.settings_rounded,
+                            title: 'settings.title'.tr(),
                             onTap: () => _navigate(
                               context,
-                              RouteNames.marketRates,
+                              RouteNames.settings,
                               isPush: true,
                             ),
                           ),
-                        ),
-
-                        const SizedBox(height: AppSpacing.xl),
-
-                        _SectionLabel(label: 'navigation.settings'.tr()),
-                        const SizedBox(height: AppSpacing.sm),
-                        _DrawerItem(
-                          icon: Icons.settings_outlined,
-                          activeIcon: Icons.settings_rounded,
-                          title: 'settings.title'.tr(),
-                          onTap: () => _navigate(
-                            context,
-                            RouteNames.settings,
-                            isPush: true,
+                          _DrawerItem(
+                            icon: Icons.help_outline_rounded,
+                            activeIcon: Icons.help_rounded,
+                            title: 'navigation.help'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.help, isPush: true),
                           ),
-                        ),
+                        ] else ...[
+                          _SectionLabel(label: 'navigation.main'.tr()),
+                          const SizedBox(height: AppSpacing.sm),
+                          _DrawerItem(
+                            icon: Icons.home_outlined,
+                            activeIcon: Icons.home_rounded,
+                            title: 'navigation.home'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.farmerHome),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'marketplace',
+                            child: _DrawerItem(
+                              icon: Icons.store_outlined,
+                              activeIcon: Icons.store_rounded,
+                              title: 'navigation.marketplace'.tr(),
+                              onTap: () =>
+                                  _navigate(context, RouteNames.marketplace),
+                            ),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'orders',
+                            child: _DrawerItem(
+                              icon: Icons.shopping_bag_outlined,
+                              activeIcon: Icons.shopping_bag_rounded,
+                              title: 'navigation.orders'.tr(),
+                              onTap: () => _navigate(context, RouteNames.orders),
+                            ),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'myCrops',
+                            child: _DrawerItem(
+                              icon: Icons.agriculture_outlined,
+                              activeIcon: Icons.agriculture_rounded,
+                              title: 'home.quick_actions.my_crops'.tr(),
+                              onTap: () => _navigate(context, RouteNames.myCrops),
+                            ),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'ai',
+                            fallbackMode: FeatureGuardMode.disable,
+                            child: _DrawerItem(
+                              icon: Icons.smart_toy_outlined,
+                              activeIcon: Icons.smart_toy_rounded,
+                              title: 'navigation.ai'.tr(),
+                              onTap: () => _navigate(
+                                context,
+                                RouteNames.aiChat,
+                                isPush: true,
+                              ),
+                              isAIPowered: true,
+                            ),
+                          ),
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          _SectionLabel(label: 'navigation.explore'.tr()),
+                          const SizedBox(height: AppSpacing.sm),
+                          FeatureGuard(
+                            featureKey: 'news',
+                            fallbackMode: FeatureGuardMode.disable,
+                            child: _DrawerItem(
+                              icon: Icons.article_outlined,
+                              activeIcon: Icons.article_rounded,
+                              title: 'navigation.news'.tr(),
+                              onTap: () =>
+                                  _navigate(context, RouteNames.news, isPush: true),
+                            ),
+                          ),
+                          _DrawerItem(
+                            icon: Icons.help_outline_rounded,
+                            activeIcon: Icons.help_rounded,
+                            title: 'navigation.help'.tr(),
+                            onTap: () =>
+                                _navigate(context, RouteNames.help, isPush: true),
+                          ),
+                          FeatureGuard(
+                            featureKey: 'marketRates',
+                            child: _DrawerItem(
+                              icon: Icons.analytics_outlined,
+                              activeIcon: Icons.analytics_rounded,
+                              title: 'market_rates.title'.tr(),
+                              onTap: () => _navigate(
+                                context,
+                                RouteNames.marketRates,
+                                isPush: true,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: AppSpacing.xl),
+
+                          _SectionLabel(label: 'navigation.settings'.tr()),
+                          const SizedBox(height: AppSpacing.sm),
+                          _DrawerItem(
+                            icon: Icons.settings_outlined,
+                            activeIcon: Icons.settings_rounded,
+                            title: 'settings.title'.tr(),
+                            onTap: () => _navigate(
+                              context,
+                              RouteNames.settings,
+                              isPush: true,
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: AppSpacing.xxl),
                       ],
@@ -204,6 +288,7 @@ class AppDrawer extends ConsumerWidget {
               borderRadius: 99,
               padding: const EdgeInsets.all(8),
               opacity: 0.1,
+              blur: 0.0,
               child: const Icon(Icons.close_rounded, size: 20),
             ),
           ),
@@ -372,6 +457,7 @@ class _ActionTile extends StatelessWidget {
       child: GlassContainer(
         borderRadius: 16,
         opacity: 0.05,
+        blur: 0.0,
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Column(
           children: [
@@ -405,6 +491,7 @@ class _LogoutButton extends StatelessWidget {
       child: GlassContainer(
         borderRadius: AppRadius.card,
         opacity: 0.05,
+        blur: 0.0,
         color: theme.colorScheme.error,
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(

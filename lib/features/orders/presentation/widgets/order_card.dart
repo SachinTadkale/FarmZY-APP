@@ -31,7 +31,7 @@ class OrderCard extends StatelessWidget {
     return GlassContainer(
       borderRadius: 28,
       opacity: 0.05,
-      blur: 20,
+      blur: 0,
       padding: EdgeInsets.zero,
       child: Material(
         color: Colors.transparent,
@@ -91,6 +91,7 @@ class OrderCard extends StatelessWidget {
                 GlassContainer(
                   borderRadius: 16,
                   opacity: 0.05,
+                  blur: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

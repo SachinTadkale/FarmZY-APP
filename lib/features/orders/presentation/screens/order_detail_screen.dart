@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/features/orders/data/models/order_model.dart';
 import 'package:farmzy/features/orders/presentation/widgets/status_badge.dart';
 import 'package:farmzy/features/orders/providers/orders_controller.dart';
+import 'package:farmzy/features/orders/providers/dispute_controller.dart';
 import 'package:farmzy/core/network/app_network_error.dart';
 import 'package:farmzy/shared/widgets/app_async_state.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
@@ -24,6 +25,7 @@ class OrderDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final orderAsync = ref.watch(orderDetailProvider(orderId));
     final actionState = ref.watch(orderActionControllerProvider);
+    final disputeState = ref.watch(disputeControllerProvider);
 
     ref.listen(orderActionControllerProvider, (previous, next) {
       next.whenOrNull(
@@ -39,12 +41,27 @@ class OrderDetailScreen extends ConsumerWidget {
       );
     });
 
+    ref.listen(disputeControllerProvider, (previous, next) {
+      next.whenOrNull(
+        data: (message) {
+          if (message != null && message.isNotEmpty) {
+            AppSnackBar.showSuccess(context, message);
+            ref.read(disputeControllerProvider.notifier).clear();
+            Navigator.pop(context); // Auto dismiss dispute bottom sheet
+          }
+        },
+        error: (error, _) {
+          AppSnackBar.showError(context, AppNetworkError.userMessage(error));
+        },
+      );
+    });
+
     return AppScaffold(
       body: orderAsync.when(
         skipLoadingOnReload: true,
         data: (order) => _OrderDetailView(
           order: order,
-          isActionLoading: actionState.isLoading,
+          isActionLoading: actionState.isLoading || disputeState.isLoading,
           onAccept: () async {
             await ref
                 .read(orderActionControllerProvider.notifier)
@@ -69,7 +86,7 @@ class OrderDetailScreen extends ConsumerWidget {
 }
 
 /// Order Detail View.
-class _OrderDetailView extends StatelessWidget {
+class _OrderDetailView extends ConsumerWidget {
   final OrderModel order;
   final bool isActionLoading;
   final Future<void> Function() onAccept;
@@ -84,7 +101,7 @@ class _OrderDetailView extends StatelessWidget {
 
   @override
   /// Build.
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final lang = context.locale.languageCode;
     final translatedName = order.product.translations.getTranslatedField('name', lang, original: order.product.name);
     final currency = NumberFormat.currency(locale: 'en_IN', symbol: 'Rs. ');
@@ -175,8 +192,41 @@ class _OrderDetailView extends StatelessWidget {
                   StatusBadge(status: _effectiveDeliveryStatus(order)),
                 ],
               ),
+              if (order.delivery != null) ...[
+                const SizedBox(height: 10),
+                _RowLabelValue(
+                  label: 'Delivery Partner',
+                  value: order.delivery?.partner?.name.isNotEmpty == true
+                      ? order.delivery!.partner!.name
+                      : 'Awaiting assignment',
+                ),
+                const SizedBox(height: 10),
+                _RowLabelValue(
+                  label: 'Vehicle',
+                  value: order.delivery?.partner != null
+                      ? '${order.delivery!.partner!.vehicleType} • ${order.delivery!.partner!.vehicleNumber}'
+                      : 'NA',
+                ),
+                const SizedBox(height: 10),
+                _RowLabelValue(
+                  label: 'Pickup Verification',
+                  value: order.delivery!.pickupOtpVerified ? 'Verified' : 'Pending',
+                ),
+                const SizedBox(height: 10),
+                _RowLabelValue(
+                  label: 'Delivery Verification',
+                  value: order.delivery!.deliveryOtpVerified ? 'Verified' : 'Pending',
+                ),
+              ],
             ],
           ),
+          if (order.delivery != null) ...[
+            const SizedBox(height: 12),
+            _DetailSection(
+              title: 'Delivery Timeline',
+              children: _buildTimeline(order),
+            ),
+          ],
           if (_canTakeSellerDecision(order)) ...[
             const SizedBox(height: 14),
             Row(
@@ -203,6 +253,30 @@ class _OrderDetailView extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+          if (_canRaiseDispute(order)) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                  side: BorderSide(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: isActionLoading
+                    ? null
+                    : () => _showRaiseDisputeSheet(context, ref),
+                icon: const Icon(Icons.gavel_rounded, size: 18),
+                label: const Text(
+                  'Raise A Dispute',
+                  style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                ),
+              ),
             ),
           ],
         ],
@@ -322,12 +396,77 @@ class _OrderDetailView extends StatelessWidget {
 
   /// Effective Delivery Status.
   String _effectiveDeliveryStatus(OrderModel order) {
+    if (order.delivery != null && order.delivery!.status.isNotEmpty) {
+      return order.delivery!.status.toUpperCase();
+    }
     final status = order.effectiveOrderStatus;
     if (status == 'SHIPPED') return 'SHIPPED';
     if (status == 'DELIVERED') return 'DELIVERED';
     if (status == 'COMPLETED') return 'COMPLETED';
     if (status == 'CANCELLED') return 'CANCELLED';
     return 'PROCESSING';
+  }
+
+  List<Widget> _buildTimeline(OrderModel order) {
+    final stages = <Map<String, dynamic>>[
+      {'label': 'Order Confirmed', 'done': order.orderStatus.toUpperCase() != 'CREATED'},
+      {'label': 'Payment Held', 'done': ['HELD', 'ESCROWED', 'RELEASED', 'SUCCESS', 'PAID'].contains(order.paymentStatus.toUpperCase())},
+      {'label': 'Delivery Assigned', 'done': order.delivery != null},
+      {'label': 'Picked Up', 'done': order.delivery?.pickupOtpVerified == true || ['PICKED_UP', 'IN_TRANSIT', 'DELIVERED'].contains(order.delivery?.status)},
+      {'label': 'In Transit', 'done': ['IN_TRANSIT', 'DELIVERED'].contains(order.delivery?.status)},
+      {'label': 'Delivered', 'done': order.delivery?.deliveryOtpVerified == true || order.delivery?.status == 'DELIVERED'},
+      {'label': 'Payment Released', 'done': order.paymentStatus.toUpperCase() == 'RELEASED'},
+    ];
+
+    return stages
+        .map(
+          (stage) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              children: [
+                Icon(
+                  stage['done'] == true ? Icons.check_circle : Icons.radio_button_unchecked,
+                  size: 18,
+                  color: stage['done'] == true ? Colors.green : Colors.grey,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: Text(stage['label'] as String)),
+              ],
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  /// Can Raise Dispute.
+  bool _canRaiseDispute(OrderModel order) {
+    final status = order.orderStatus.toUpperCase();
+    return status != 'CREATED' && status != 'CANCELLED' && status != 'REJECTED';
+  }
+
+  /// Show Raise Dispute Sheet.
+  void _showRaiseDisputeSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return _RaiseDisputeSheet(
+          orderId: order.id,
+          isLoading: ref.watch(disputeControllerProvider).isLoading,
+          onSubmit: (reason, description) async {
+            await ref.read(disputeControllerProvider.notifier).raiseDispute(
+                  orderId: order.id,
+                  reason: reason,
+                  description: description,
+                );
+          },
+        );
+      },
+    );
   }
 }
 
@@ -412,6 +551,178 @@ class _RowLabelValue extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RaiseDisputeSheet extends StatefulWidget {
+  final String orderId;
+  final Future<void> Function(String reason, String description) onSubmit;
+  final bool isLoading;
+
+  const _RaiseDisputeSheet({
+    required this.orderId,
+    required this.onSubmit,
+    required this.isLoading,
+  });
+
+  @override
+  State<_RaiseDisputeSheet> createState() => _RaiseDisputeSheetState();
+}
+
+class _RaiseDisputeSheetState extends State<_RaiseDisputeSheet> {
+  final _formKey = GlobalKey<FormState>();
+  String? _selectedReason;
+  final _descController = TextEditingController();
+
+  final List<String> _reasons = [
+    'Payment Delay or Failure',
+    'Unreasonable Return Demands',
+    'Quality Complaints Dispute',
+    'Contract/Price Agreement Violation',
+    'Communication Failure',
+    'Other Policy Violation',
+  ];
+
+  @override
+  void dispose() {
+    _descController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Icon(Icons.gavel_rounded, color: theme.colorScheme.error),
+                const SizedBox(width: 8),
+                Text(
+                  'Raise a Dispute',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Escalate this order to platform administration for arbitration.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+            ),
+            const SizedBox(height: 20),
+            DropdownButtonFormField<String>(
+              value: _selectedReason,
+              decoration: InputDecoration(
+                labelText: 'Primary Reason',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: _reasons.map((reason) {
+                return DropdownMenuItem(
+                  value: reason,
+                  child: Text(reason, style: const TextStyle(fontSize: 14)),
+                );
+              }).toList(),
+              onChanged: (val) {
+                setState(() {
+                  _selectedReason = val;
+                });
+              },
+              validator: (val) => val == null ? 'Please select a reason' : null,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _descController,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: 'Description',
+                hintText: 'Provide specific details about the dispute...',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              validator: (val) {
+                if (val == null || val.trim().isEmpty) {
+                  return 'Please enter a description';
+                }
+                if (val.trim().length < 10) {
+                  return 'Description must be at least 10 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: widget.isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                    ),
+                    onPressed: widget.isLoading
+                        ? null
+                        : () {
+                            if (_formKey.currentState!.validate()) {
+                              widget.onSubmit(
+                                _selectedReason!,
+                                _descController.text.trim(),
+                              );
+                            }
+                          },
+                    child: widget.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Text('Submit Dispute'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

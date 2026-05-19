@@ -496,7 +496,7 @@ class _ListingCard extends StatelessWidget {
     return GlassContainer(
       borderRadius: 32,
       opacity: 0.05,
-      blur: 20,
+      blur: 0,
       padding: EdgeInsets.zero,
       child: Material(
         color: Colors.transparent,
@@ -584,6 +584,7 @@ class _ListingCard extends StatelessWidget {
       height: 90,
       borderRadius: 22,
       opacity: 0.1,
+      blur: 0,
       padding: const EdgeInsets.all(2),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -607,7 +608,7 @@ class _ListingCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       color: color,
       opacity: 0.15,
-      blur: 5,
+      blur: 0,
       child: Text(
         status,
         style: TextStyle(

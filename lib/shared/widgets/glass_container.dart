@@ -58,39 +58,65 @@ class GlassContainer extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: shape == BoxShape.circle 
-          ? BorderRadius.circular(999) 
-          : (customBorderRadius ?? BorderRadius.circular(borderRadius)),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            width: width,
-            height: height,
-            padding: padding,
-            decoration: BoxDecoration(
-              color: glassColor.withValues(alpha: opacity),
+      child: blur > 0.0
+          ? ClipRRect(
               borderRadius: shape == BoxShape.circle 
-                ? null 
+                ? BorderRadius.circular(999) 
                 : (customBorderRadius ?? BorderRadius.circular(borderRadius)),
-              shape: shape,
-              border: border ?? Border.all(
-                color: borderColor,
-                width: 1.0,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: Container(
+                  width: width,
+                  height: height,
+                  padding: padding,
+                  decoration: BoxDecoration(
+                    color: glassColor.withValues(alpha: opacity),
+                    borderRadius: shape == BoxShape.circle 
+                      ? null 
+                      : (customBorderRadius ?? BorderRadius.circular(borderRadius)),
+                    shape: shape,
+                    border: border ?? Border.all(
+                      color: borderColor,
+                      width: 1.0,
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        glassColor.withValues(alpha: opacity * 1.5),
+                        glassColor.withValues(alpha: opacity * 0.5),
+                      ],
+                    ),
+                  ),
+                  child: child,
+                ),
               ),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  glassColor.withValues(alpha: opacity * 1.5),
-                  glassColor.withValues(alpha: opacity * 0.5),
-                ],
+            )
+          : Container(
+              width: width,
+              height: height,
+              padding: padding,
+              decoration: BoxDecoration(
+                color: glassColor.withValues(alpha: opacity),
+                borderRadius: shape == BoxShape.circle 
+                  ? null 
+                  : (customBorderRadius ?? BorderRadius.circular(borderRadius)),
+                shape: shape,
+                border: border ?? Border.all(
+                  color: borderColor,
+                  width: 1.0,
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    glassColor.withValues(alpha: opacity * 1.5),
+                    glassColor.withValues(alpha: opacity * 0.5),
+                  ],
+                ),
               ),
+              child: child,
             ),
-            child: child,
-          ),
-        ),
-      ),
     );
   }
 }

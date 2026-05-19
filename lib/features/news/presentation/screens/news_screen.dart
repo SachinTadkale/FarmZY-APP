@@ -166,6 +166,7 @@ class _CategoryChip extends StatelessWidget {
       child: GlassContainer(
         borderRadius: 99,
         opacity: isActive ? 0.2 : 0.05,
+        blur: 0,
         color: isActive ? colors.primary : colors.surface,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Text(
@@ -216,6 +217,7 @@ class _NewsTile extends StatelessWidget {
         child: GlassContainer(
           borderRadius: AppRadius.card,
           opacity: 0.05,
+          blur: 0,
           padding: const EdgeInsets.all(8),
           child: Row(
             children: [

@@ -34,7 +34,15 @@
     "status_cancelled": "रद्द हुआ",
     "no_results": "आपकी खोज से कोई परिणाम नहीं मिला",
     "try_again": "कोई दूसरा शब्द आजमाएं",
-    "press_back_again": "बाहर निकलने के लिए फिर से बैक दबाएं"
+    "press_back_again": "बाहर निकलने के लिए फिर से बैक दबाएं",
+    "status_pending": "लंबित",
+    "status_accepted": "स्वीकृत",
+    "status_processing": "प्रसंस्करण",
+    "status_out_for_delivery": "वितरण के लिए बाहर",
+    "status_under_review": "समीक्षा के अधीन",
+    "status_approved": "स्वीकृत",
+    "status_rejected": "अस्वीकृत",
+    "status_unknown": "अज्ञात"
   },
   "navigation": {
     "home": "होम",
@@ -44,15 +52,17 @@
     "main": "मुख्य",
     "explore": "एक्सप्लोर",
     "settings": "सेटिंग्स",
-    "ai": "FarmZY AI",
+    "ai": "Saira Ai",
     "news": "समाचार",
     "help": "सहायता केंद्र",
     "logout": "लॉगआउट",
     "language": "भाषा",
-    "appearance": "दिखावट"
+    "appearance": "दिखावट",
+    "jobs": "कार्य",
+    "active": "सक्रिय वितरण"
   },
   "ai": {
-    "title": "FarmZY AI",
+    "title": "Saira Ai",
     "subtitle": "आपका स्मार्ट कृषि सहायक",
     "ask_anything": "खेती के बारे में कुछ भी पूछें...",
     "quick_market": "बाज़ार भाव",
@@ -61,9 +71,14 @@
     "quick_sell": "फसलें बेचें",
     "quick_schemes": "सरकारी योजनाएं",
     "quick_app": "ऐप सहायता",
-    "type_message": "FarmZY AI से पूछें...",
-    "thinking": "FarmZY AI सोच रहा है...",
-    "welcome_msg": "नमस्ते! मैं आपका AI सहायक हूँ। मैं बाज़ार के रुझान, फसल रोग निदान, या FarmZY ऐप का उपयोग करने में आपकी मदद कर सकता हूँ। आपके मन में क्या है?"
+    "type_message": "Saira Ai से पूछें...",
+    "thinking": "Saira Ai सोच रहा है...",
+    "welcome_msg": "नमस्ते! मैं आपका AI सहायक हूँ। मैं बाज़ार के रुझान, फसल रोग निदान, या FarmZY ऐप का उपयोग करने में आपकी मदद कर सकता हूँ। आपके मन में क्या है?",
+    "history_title": "चैट इतिहास",
+    "no_sessions": "कोई बातचीत का इतिहास नहीं मिला",
+    "deleted_success": "चैट सत्र सफलतापूर्वक हटा दिया गया",
+    "welcome_title": "सायरा एआई में आपका स्वागत है",
+    "welcome_subtitle": "आपका स्मार्ट कृषि साथी"
   },
   "news": {
     "title": "समाचार और बाज़ार अपडेट",
@@ -89,7 +104,7 @@
     "orders": "ऑर्डर और भुगतान",
     "delivery": "वितरण प्रक्रिया",
     "profile": "प्रोफ़ाइल और क्यूआर",
-    "ai_usage": "FarmZY AI सहायता",
+    "ai_usage": "Saira Ai सहायता",
     "faq": "सामान्य प्रश्न",
     "article_details": "लेख का विवरण",
     "important_notes": "महत्वपूर्ण बातें",
@@ -160,7 +175,9 @@
     "available_quantity": "उपलब्ध मात्रा",
     "min_order": "न्यूनतम ऑर्डर",
     "seller_details": "विक्रेता का विवरण",
-    "description": "उत्पाद विवरण"
+    "description": "उत्पाद विवरण",
+    "price": "कीमत",
+    "sort_by": "इसके अनुसार क्रमित करें"
   },
   "market_rates": {
     "title": "बाज़ार भाव",
@@ -175,7 +192,9 @@
     "nearby": "पास के बाज़ार भाव",
     "variety": "किस्म",
     "unit": "इकाई",
-    "error_load": "बाज़ार भाव लोड करने में विफल"
+    "error_load": "बाज़ार भाव लोड करने में विफल",
+    "no_data": "कोई बाजार दर उपलब्ध नहीं है",
+    "range": "मूल्य सीमा"
   },
   "home": {
     "greeting": "नमस्ते,",
@@ -280,6 +299,32 @@
       "invalid_otp": "अमान्य ओटीपी। कृपया फिर से प्रयास करें",
       "passwords_dont_match": "पासवर्ड मेल नहीं खाते",
       "field_required": "यह फ़ील्ड आवश्यक है"
+    },
+    "forgot_password": {
+      "success_message": "पासवर्ड रीसेट लिंक आपके ईमेल पर भेज दी गई है",
+      "title": "पासवर्ड भूल गए?",
+      "subtitle": "पासवर्ड रीसेट लिंक प्राप्त करने के लिए अपना ईमेल दर्ज करें",
+      "email_label": "ईमेल पता",
+      "send_otp": "रीसेट लिंक भेजें",
+      "back_to_login": "लॉगिन पर वापस जाएं"
+    },
+    "otp": {
+      "title": "ओटीपी सत्यापित करें",
+      "subtitle": "{} पर भेजा गया ओटीपी दर्ज करें",
+      "verify_button": "सत्यापित करें और आगे बढ़ें",
+      "resend": "कोड पुनः भेजें"
+    },
+    "reset_password": {
+      "errors": {
+        "new_password_required": "नया पासवर्ड आवश्यक है",
+        "confirm_password_required": "कृपया अपने नए पासवर्ड की पुष्टि करें",
+        "password_mismatch": "पासवर्ड मेल नहीं खाते"
+      },
+      "success_message": "पासवर्ड सफलतापूर्वक रीसेट किया गया",
+      "title": "पासवर्ड रीसेट करें",
+      "new_password_label": "नया पासवर्ड",
+      "confirm_password_label": "नए पासवर्ड की पुष्टि करें",
+      "reset_button": "पासवर्ड रीसेट करें"
     }
   },
   "role": {
@@ -335,7 +380,41 @@
     "vehicle_mini_truck": "छोटा ट्रक",
     "vehicle_pickup": "पिकअप",
     "vehicle_truck": "ट्रक",
-    "vehicle_heavy_truck": "भारी ट्रक"
+    "vehicle_heavy_truck": "भारी ट्रक",
+    "errors": {
+      "state": "कृपया अपना राज्य चुनें",
+      "district": "कृपया अपना जिला चुनें",
+      "village": "कृपया अपने गाँव का नाम दर्ज करें",
+      "land": "कृपया अपने भूमि क्षेत्र की प्रविष्ट करें",
+      "land_invalid": "कृपया एक वैध भूमि क्षेत्र दर्ज करें",
+      "pincode": "कृपया अपना पिनकोड दर्ज करें",
+      "pincode_invalid": "कृपया एक वैध 6-अंकीय पिनकोड दर्ज करें",
+      "vehicle_number": "कृपया अपने वाहन का नंबर दर्ज करें",
+      "license_number": "कृपया अपने ड्राइविंग लाइसेंस का नंबर दर्ज करें",
+      "capacity": "कृपया भार क्षमता दर्ज करें",
+      "capacity_invalid": "कृपया एक वैध भार क्षमता दर्ज करें",
+      "acc_holder": "कृपया खाताधारक का नाम दर्ज करें",
+      "acc_number": "कृपया खाता संख्या दर्ज करें",
+      "bank_name": "कृपया बैंक का नाम दर्ज करें",
+      "ifsc": "कृपया bank का IFSC कोड दर्ज करें",
+      "doc_number": "कृपया अपने दस्तावेज़ की संख्या दर्ज करें",
+      "upload_front": "कृपया आईडी का अगला भाग अपलोड करें",
+      "upload_back_aadhaar": "कृपया आधार का पिछला भाग अपलोड करें",
+      "upload_license": "कृपया अपना ड्राइविंग लाइसेंस अपलोड करें",
+      "upload_rc": "कृपया वाहन पंजीकरण प्रमाणपत्र (RC) अपलोड करें",
+      "agree_terms": "आपको नियमों और शर्तों से सहमत होना होगा",
+      "aadhaar_invalid": "अमान्य आधार संख्या (12 अंकों की आवश्यकता है)",
+      "pan_invalid": "अमान्य पैन कार्ड संख्या"
+    },
+    "back_not_required": "पिछला भाग आवश्यक नहीं है",
+    "select_id_type": "आईडी दस्तावेज़ का प्रकार चुनें",
+    "id_number_hint": "दस्तावेज़ आईडी संख्या दर्ज करें",
+    "upload_pan": "पैन कार्ड दस्तावेज़ अपलोड करें",
+    "pan_card_label": "पैन कार्ड आईडी",
+    "upload_aadhaar_both": "आधार कार्ड का अगला और पिछला भाग अपलोड करें",
+    "front": "अगला भाग",
+    "back": "पिछला भाग",
+    "terms_privacy": "मैं सेवा की शर्तों और गोपनीयता नीति से सहमत हूँ"
   },
   "v_pending_title": "सत्यापन लंबित है",
   "v_pending_subtitle": "हम आपके दस्तावेज़ों की समीक्षा कर रहे हैं। आपका खाता सत्यापित होने पर आपको सूचित किया जाएगा। इसमें आमतौर पर 24-48 घंटे लगते हैं।",
@@ -358,5 +437,56 @@
   "feature_unavailable_disabled_subtitle": "यह सुविधा रखरखाव के लिए अस्थायी रूप से अक्षम है। हम इसे जल्द ही वापस लाने के लिए कड़ी मेहनत कर रहे हैं।",
   "feature_unavailable_coming_soon_title": "{} जल्द ही आ रहा है",
   "feature_unavailable_coming_soon_subtitle": "हम इस सुविधा को सावधानी से बना रहे हैं। अपडेट के लिए बने रहें!",
-  "feature_unavailable_back_to_home": "होम पर वापस जाएं"
+  "feature_unavailable_back_to_home": "होम पर वापस जाएं",
+  "v_pending": {
+    "title": "सत्यापन लंबित",
+    "subtitle": "हम आपके दस्तावेज़ों की समीक्षा कर रहे हैं। इसमें आमतौर पर 24-48 घंटे लगते हैं।",
+    "refresh": "स्थिति की जांच करें",
+    "logout": "साइन आउट"
+  },
+  "my_crops": {
+    "add_crop": "नई फसल जोड़ें",
+    "no_crops_title": "कोई फसल पंजीकृत नहीं है",
+    "no_crops_subtitle": "अपनी उपज का रिकॉर्ड रखने के लिए '+' या 'नई फसल जोड़ें' पर टैप करें।",
+    "title": "मेरी फसलें",
+    "update_crop": "फसल के विवरण को अपडेट करें",
+    "choose_image": "फसल की छवि चुनें",
+    "name_label": "फसल का नाम",
+    "save_crop": "फसल सहेजें",
+    "errors": {
+      "required_fields": "कृपया सभी आवश्यक फ़ील्ड भरें"
+    },
+    "delete_crop": "फसल हटाएं",
+    "delete_confirm_title": "हटाने की पुष्टि",
+    "delete_confirm_msg": "क्या आप वाकई इस फसल को हटाना चाहते हैं?",
+    "listed_badge": "सूचीबद्ध"
+  },
+  "transactions": {
+    "earnings": "कमाई",
+    "expenses": "खर्च",
+    "all": "सभी लेन-देन",
+    "search_hint": "लेन-देन खोजें...",
+    "all_status": "सभी स्थिति",
+    "sort_newest": "सबसे नया पहले",
+    "sort_oldest": "सबसे पुराना पहले",
+    "no_transactions": "कोई लेन-देन नहीं मिला",
+    "loading": "लेन-देन का इतिहास लोड हो रहा है...",
+    "error_load": "लेन-देन इतिहास लोड करने में विफल",
+    "id_label": "लेन-देन आईडी",
+    "copied": "लेन-देन आईडी क्लिपबोर्ड पर कॉपी की गई",
+    "crop_payout": "फसल बिक्री भुगतान",
+    "delivery_payout": "वितरण सेवा भुगतान",
+    "order_payment": "ऑर्डर भुगतान",
+    "other_transaction": "समायोजन / अन्य"
+  },
+  "validation": {
+    "required": "यह फ़ील्ड आवश्यक है",
+    "invalid_price": "कृपया एक वैध मूल्य दर्ज करें",
+    "price_too_high": "दर्ज मूल्य बहुत अधिक है",
+    "invalid_quantity": "कृपया एक वैध मात्रा दर्ज करें",
+    "exceeds_stock": "मात्रा उपलब्ध स्टॉक {} से अधिक है",
+    "quantity_too_high": "दर्ज मात्रा बहुत अधिक है",
+    "invalid_min_order": "कृपया एक वैध न्यूनतम ऑर्डर मात्रा दर्ज करें",
+    "min_order_exceeds_total": "न्यूनतम ऑर्डर कुल मात्रा से अधिक नहीं हो सकती"
+  }
 }

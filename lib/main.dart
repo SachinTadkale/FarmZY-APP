@@ -62,7 +62,27 @@ Future<void> main() async {
   /// 🔥 REQUIRED for easy_localization
   await EasyLocalization.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  const String env = String.fromEnvironment('ENV', defaultValue: '');
+  String envFile = ".env";
+  
+  if (env == 'dev') {
+    envFile = ".env.dev";
+  } else if (env == 'staging') {
+    envFile = ".env.staging";
+  } else if (env == 'prod') {
+    envFile = ".env.prod";
+  } else {
+    envFile = kReleaseMode ? ".env.prod" : ".env.dev";
+  }
+  
+  try {
+    await dotenv.load(fileName: envFile);
+  } catch (e) {
+    if (kDebugMode) {
+      print("⚠️ FAILED TO LOAD ENV '$envFile', FALLING BACK TO '.env': $e");
+    }
+    await dotenv.load(fileName: ".env");
+  }
 
   // Debug verification logs
   if (kDebugMode) {

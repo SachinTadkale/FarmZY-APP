@@ -3,6 +3,7 @@ import 'package:farmzy/core/config/app_config.dart';
 import 'package:farmzy/core/network/auth_interceptor.dart';
 import 'package:farmzy/core/network/lang_interceptor.dart';
 import 'package:farmzy/core/network/maintenance_interceptor.dart';
+import 'package:farmzy/core/network/retry_interceptor.dart';
 import 'package:farmzy/core/storage/secure_storage_service.dart';
 import 'package:farmzy/features/auth/providers/role_selection_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,15 +12,18 @@ final dioProvider = Provider<Dio>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: AppConfig.baseUrl,
-      connectTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 60),
-      sendTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 15),
+      sendTimeout: const Duration(seconds: 15),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
     ),
   );
+
+  // Exponential Backoff & Dynamic Host Failover Interceptor
+  dio.interceptors.add(RetryInterceptor(dio: dio));
 
   // Full Logging Interceptor (Standard Dio LogInterceptor)
   dio.interceptors.add(

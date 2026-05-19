@@ -88,7 +88,7 @@ class _HelpScreenState extends ConsumerState<HelpScreen> {
             ),
             _FAQItem(
               question: "How does the AI assistant help?",
-              answer: "FarmZY AI can provide market predictions, crop disease diagnosis, and weather advice.",
+              answer: "Saira Ai can provide market predictions, crop disease diagnosis, and weather advice.",
             ),
             const SizedBox(height: 100),
           ],

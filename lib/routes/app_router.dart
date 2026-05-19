@@ -13,6 +13,7 @@ import 'package:farmzy/features/auth/providers/auth_state.dart';
 import 'package:farmzy/features/auth/providers/role_selection_provider.dart';
 import 'package:farmzy/features/delivery_partner/presentation/screens/delivery_jobs_screen.dart';
 import 'package:farmzy/features/delivery_partner/presentation/screens/delivery_partner_home_screen.dart';
+import 'package:farmzy/features/delivery_partner/presentation/screens/delivery_wallet_screen.dart';
 import 'package:farmzy/features/ai/presentation/screens/ai_screen.dart';
 import 'package:farmzy/features/news/presentation/screens/news_screen.dart';
 import 'package:farmzy/features/help/presentation/screens/help_screen.dart';
@@ -177,6 +178,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ? currentPath == RouteNames.deliveryHome ||
                 currentPath == RouteNames.deliveryJobs ||
                 currentPath == RouteNames.deliveryDeliveries ||
+                currentPath == RouteNames.deliveryWallet ||
                 currentPath == RouteNames.profile ||
                 currentPath == RouteNames.transactionHistory ||
                 currentPath == RouteNames.settings ||
@@ -299,6 +301,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RouteNames.deliveryDeliveries,
             builder: (context, state) => const DeliveryDeliveriesScreen(),
+          ),
+          GoRoute(
+            path: RouteNames.deliveryWallet,
+            builder: (context, state) => const DeliveryWalletScreen(),
           ),
           GoRoute(
             path: RouteNames.marketplace,

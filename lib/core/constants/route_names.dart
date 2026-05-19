@@ -17,6 +17,7 @@ class RouteNames {
   static const deliveryHome = '/delivery/home';
   static const deliveryJobs = '/delivery/jobs';
   static const deliveryDeliveries = '/delivery/active';
+  static const deliveryWallet = '/delivery/wallet';
   static const marketplace = '/marketplace';
   static const myCrops = '/my-crops';
   static const orders = '/orders';
