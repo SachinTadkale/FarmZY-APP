@@ -310,7 +310,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   padding: const EdgeInsets.all(16),
                   borderRadius: 24,
                   opacity: 0.03,
-                  blur: 10,
+                  blur: 0,
                   child: Row(
                     children: [
                       GlassContainer(
@@ -318,6 +318,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         padding: const EdgeInsets.all(10),
                         color: theme.colorScheme.primary,
                         opacity: 0.1,
+                        blur: 0,
                         child: Icon(
                           Icons.eco_rounded,
                           color: theme.colorScheme.primary,
@@ -435,7 +436,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     borderRadius: 28,
                     opacity: 0.03,
-                    blur: 15,
+                    blur: 0,
                     child: Column(
                       children: [
                         GlassContainer(
@@ -443,6 +444,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           padding: const EdgeInsets.all(12),
                           color: color,
                           opacity: 0.15,
+                          blur: 0,
                           child: Icon(
                             e["icon"] as IconData,
                             color: color,
@@ -571,13 +573,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             margin: const EdgeInsets.only(bottom: 12),
             borderRadius: 24,
             opacity: 0.02,
-            blur: 5,
+            blur: 0,
             child: ListTile(
               leading: GlassContainer(
                 borderRadius: 12,
                 padding: const EdgeInsets.all(8),
                 color: color,
                 opacity: 0.1,
+                blur: 0,
                 child: Icon(icon, color: color, size: 22),
               ),
               title: Text(

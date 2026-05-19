@@ -79,7 +79,7 @@ class _MyCropsScreenState extends ConsumerState<MyCropsScreen> {
                         itemBuilder: (context, index) => _CropCard(
                           crop: crops[index], 
                           onEdit: () => _showCropPanel(context, ref, crops[index]),
-                        ).animate().fadeIn(delay: (index * 100).ms).slideY(begin: 0.1, end: 0),
+                        ),
                       ),
                     ),
               loading: () => ListView.separated(
@@ -339,13 +339,13 @@ class _CropCard extends StatelessWidget {
     final colors = theme.colorScheme;
     
     // Attempt to localize the category name if it exists in translations
-    final translatedCategory = 'category.${crop.category.toLowerCase()}'.tr();
-    final displayCategory = translatedCategory.contains('category.') ? crop.category : translatedCategory;
+    final translatedCategory = 'common.${crop.category.toLowerCase()}'.tr();
+    final displayCategory = translatedCategory.contains('common.') ? crop.category : translatedCategory;
 
     return GlassContainer(
       borderRadius: 32,
       opacity: 0.1,
-      blur: 20,
+      blur: 0.0,
       padding: EdgeInsets.zero,
       child: Material(
         color: Colors.transparent,
@@ -361,6 +361,7 @@ class _CropCard extends StatelessWidget {
                   height: 76,
                   borderRadius: 24,
                   opacity: 0.1,
+                  blur: 0.0,
                   padding: const EdgeInsets.all(2),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
@@ -413,7 +414,7 @@ class _CropCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       borderRadius: 14,
       opacity: 0.1,
-      blur: 5,
+      blur: 0.0,
       color: color,
       child: Text(
         label,

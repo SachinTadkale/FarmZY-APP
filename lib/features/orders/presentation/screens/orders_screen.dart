@@ -257,7 +257,7 @@ class _TabPill extends StatelessWidget {
       child: GlassContainer(
         borderRadius: 20,
         opacity: isSelected ? 0.2 : 0.05,
-        blur: 10,
+        blur: 0,
         color: isSelected ? selectedColor : Colors.grey,
         padding: const EdgeInsets.symmetric(vertical: 12),
         border: Border.all(

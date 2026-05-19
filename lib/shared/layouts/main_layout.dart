@@ -76,7 +76,7 @@ class MainLayout extends ConsumerWidget {
         actions: [
           GlassContainer(
             borderRadius: 99,
-            blur: 20,
+            blur: 0,
             padding: const EdgeInsets.all(8),
             margin: const EdgeInsets.only(right: 16),
             child: const Icon(Icons.notifications_none_rounded, size: 24),
@@ -90,8 +90,8 @@ class MainLayout extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: GlassContainer(
             borderRadius: 32,
-            blur: 40,
-            opacity: 0.2,
+            blur: 15,
+            opacity: 0.15,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

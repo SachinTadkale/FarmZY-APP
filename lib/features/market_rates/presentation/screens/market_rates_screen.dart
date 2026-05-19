@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farmzy/core/theme/app_spacing.dart';
 import 'package:farmzy/features/market_rates/presentation/widgets/market_rate_card.dart';
 import 'package:farmzy/features/market_rates/providers/market_rates_provider.dart';
-import 'package:farmzy/shared/widgets/app_async_state.dart';
+import 'package:farmzy/features/profile/providers/profile_provider.dart';
 import 'package:farmzy/shared/widgets/app_scaffold.dart';
 import 'package:farmzy/shared/widgets/app_shimmer.dart';
 import 'package:farmzy/shared/widgets/premium_search_bar.dart';
@@ -39,6 +39,7 @@ class _MarketRatesBody extends ConsumerStatefulWidget {
 class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  String _selectedFilter = 'ALL';
 
   @override
   void initState() {
@@ -60,12 +61,129 @@ class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
     }
   }
 
+  Widget _buildFilterChips(ThemeData theme) {
+    final filters = [
+      {'key': 'ALL', 'label': 'market_rates.all_markets'.tr(), 'icon': Icons.grid_view_rounded},
+      {'key': 'TRENDING', 'label': 'market_rates.trending'.tr(), 'icon': Icons.bolt_rounded},
+      {'key': 'GAINERS', 'label': 'market_rates.gainers'.tr(), 'icon': Icons.trending_up_rounded},
+      {'key': 'LOSERS', 'label': 'market_rates.losers'.tr(), 'icon': Icons.trending_down_rounded},
+      {'key': 'NEARBY', 'label': 'market_rates.nearby'.tr(), 'icon': Icons.location_on_rounded},
+    ];
+
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filter = filters[index];
+          final isSelected = _selectedFilter == filter['key'];
+          final color = isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.05);
+          final textColor = isSelected ? Colors.white : theme.colorScheme.onSurfaceVariant;
+
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedFilter = filter['key'] as String;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? color : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? color : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    filter['icon'] as IconData, 
+                    size: 14, 
+                    color: isSelected ? Colors.white : theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    filter['label'] as String,
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final state = ref.watch(marketRatesProvider);
     final trending = ref.watch(trendingRatesProvider);
     final gainers = ref.watch(priceGainersProvider);
     final losers = ref.watch(priceLosersProvider);
+    final profileAsync = ref.watch(profileProvider);
+
+    final userDistrict = profileAsync.value?.location ?? '';
+    List<dynamic> nearby = state.rates.where((r) {
+      if (userDistrict.isEmpty) return false;
+      return userDistrict.toLowerCase().contains(r.district.toLowerCase()) || 
+             r.district.toLowerCase().contains(userDistrict.toLowerCase()) ||
+             userDistrict.toLowerCase().contains(r.state.toLowerCase()) ||
+             r.state.toLowerCase().contains(userDistrict.toLowerCase());
+    }).toList();
+
+    if (nearby.isEmpty) {
+      nearby = state.rates.take(5).toList();
+    }
+
+    // Determine what to display in the main list
+    final List<dynamic> displayRates;
+    final bool showHorizontalSections;
+    final String mainListTitle;
+    final IconData mainListIcon;
+    final Color? mainListIconColor;
+
+    if (_selectedFilter == 'ALL') {
+      displayRates = state.rates;
+      showHorizontalSections = true;
+      mainListTitle = 'market_rates.all_markets'.tr();
+      mainListIcon = Icons.grid_view_rounded;
+      mainListIconColor = null;
+    } else if (_selectedFilter == 'TRENDING') {
+      displayRates = trending;
+      showHorizontalSections = false;
+      mainListTitle = 'market_rates.trending'.tr();
+      mainListIcon = Icons.bolt_rounded;
+      mainListIconColor = Colors.orangeAccent;
+    } else if (_selectedFilter == 'GAINERS') {
+      displayRates = gainers;
+      showHorizontalSections = false;
+      mainListTitle = 'market_rates.gainers'.tr();
+      mainListIcon = Icons.trending_up_rounded;
+      mainListIconColor = Colors.greenAccent;
+    } else if (_selectedFilter == 'LOSERS') {
+      displayRates = losers;
+      showHorizontalSections = false;
+      mainListTitle = 'market_rates.losers'.tr();
+      mainListIcon = Icons.trending_down_rounded;
+      mainListIconColor = Colors.redAccent;
+    } else {
+      displayRates = nearby;
+      showHorizontalSections = false;
+      mainListTitle = 'market_rates.nearby'.tr();
+      mainListIcon = Icons.location_on_rounded;
+      mainListIconColor = Colors.blueAccent;
+    }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(marketRatesProvider.notifier).refresh(),
@@ -85,43 +203,48 @@ class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
                         ref.read(marketRatesSearchProvider.notifier).state =
                             v,
                   ),
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildFilterChips(theme),
+                  const SizedBox(height: AppSpacing.lg),
 
-                  if (trending.isNotEmpty) ...[
-                    _SectionHeader(
-                      title: 'market_rates.trending'.tr(),
-                      icon: Icons.bolt_rounded,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _HorizontalRatesList(rates: trending),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
+                  if (showHorizontalSections) ...[
+                    if (trending.isNotEmpty) ...[
+                      _SectionHeader(
+                        title: 'market_rates.trending'.tr(),
+                        icon: Icons.bolt_rounded,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _HorizontalRatesList(rates: trending),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
 
-                  if (gainers.isNotEmpty) ...[
-                    _SectionHeader(
-                      title: 'market_rates.gainers'.tr(),
-                      icon: Icons.trending_up_rounded,
-                      color: Colors.greenAccent,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _HorizontalRatesList(rates: gainers),
-                    const SizedBox(height: AppSpacing.xl),
-                  ],
+                    if (gainers.isNotEmpty) ...[
+                      _SectionHeader(
+                        title: 'market_rates.gainers'.tr(),
+                        icon: Icons.trending_up_rounded,
+                        color: Colors.greenAccent,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _HorizontalRatesList(rates: gainers),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
 
-                  if (losers.isNotEmpty) ...[
-                    _SectionHeader(
-                      title: 'market_rates.losers'.tr(),
-                      icon: Icons.trending_down_rounded,
-                      color: Colors.redAccent,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _HorizontalRatesList(rates: losers),
-                    const SizedBox(height: AppSpacing.xl),
+                    if (losers.isNotEmpty) ...[
+                      _SectionHeader(
+                        title: 'market_rates.losers'.tr(),
+                        icon: Icons.trending_down_rounded,
+                        color: Colors.redAccent,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _HorizontalRatesList(rates: losers),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
                   ],
 
                   _SectionHeader(
-                    title: 'market_rates.all_markets'.tr(),
-                    icon: Icons.grid_view_rounded,
+                    title: mainListTitle,
+                    icon: mainListIcon,
+                    color: mainListIconColor,
                   ),
                   const SizedBox(height: AppSpacing.md),
                 ],
@@ -129,11 +252,11 @@ class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
             ),
           ),
           
-          if (state.rates.isEmpty && state.isLoading)
+          if (displayRates.isEmpty && state.isLoading)
             const SliverFillRemaining(
               child: _LoadingSkeleton(),
             )
-          else if (state.rates.isEmpty && !state.isLoading)
+          else if (displayRates.isEmpty && !state.isLoading)
             SliverFillRemaining(
               child: Center(
                 child: Text('market_rates.no_data'.tr()),
@@ -145,7 +268,7 @@ class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
               sliver: SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    if (index >= state.rates.length) {
+                    if (index >= displayRates.length) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(vertical: 32),
                         child: Center(child: CircularProgressIndicator()),
@@ -153,10 +276,10 @@ class _MarketRatesBodyState extends ConsumerState<_MarketRatesBody> {
                     }
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: MarketRateCard(rate: state.rates[index]),
+                      child: MarketRateCard(rate: displayRates[index]),
                     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0);
                   },
-                  childCount: state.rates.length + (state.hasMore ? 1 : 0),
+                  childCount: displayRates.length + (_selectedFilter == 'ALL' && state.hasMore ? 1 : 0),
                 ),
               ),
             ),

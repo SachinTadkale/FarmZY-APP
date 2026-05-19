@@ -46,6 +46,7 @@ class OrderModel {
   final OrderSnapshot snapshot;
   final String orderStatus;
   final String paymentStatus;
+  final OrderDelivery? delivery;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -57,6 +58,7 @@ class OrderModel {
     required this.snapshot,
     required this.orderStatus,
     required this.paymentStatus,
+    required this.delivery,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -76,6 +78,9 @@ class OrderModel {
       ),
       orderStatus: (json['orderStatus'] ?? '').toString(),
       paymentStatus: (json['paymentStatus'] ?? '').toString(),
+      delivery: json['delivery'] is Map<String, dynamic>
+          ? OrderDelivery.fromJson(json['delivery'] as Map<String, dynamic>)
+          : null,
       createdAt: DateTime.tryParse((json['createdAt'] ?? '').toString()),
       updatedAt: DateTime.tryParse((json['updatedAt'] ?? '').toString()),
     );
@@ -84,32 +89,82 @@ class OrderModel {
   String get effectiveOrderStatus {
     final normalizedOrder = orderStatus.toUpperCase();
     final normalizedPayment = paymentStatus.toUpperCase();
+    final normalizedDelivery = (delivery?.status ?? '').toUpperCase();
 
-    if (normalizedOrder == 'DISPATCHED' || normalizedOrder == 'IN_TRANSIT') {
-      return 'SHIPPED';
-    }
-
-    if (normalizedOrder == 'ACCEPTED' || normalizedOrder == 'CONFIRMED') {
-      return 'CONFIRMED';
-    }
-
-    if (normalizedOrder == 'PAYMENT_SUCCESS' ||
-        normalizedPayment == 'PAID' ||
-        normalizedPayment == 'SUCCESS' ||
-        normalizedPayment == 'ESCROWED' ||
-        normalizedPayment == 'RELEASED') {
-      return 'PAYMENT_RECEIVED';
-    }
-
-    if (normalizedOrder == 'CREATED') {
-      return 'INITIATED';
-    }
-
-    if (normalizedOrder == 'CANCELLED' || normalizedOrder == 'REJECTED') {
-      return 'CANCELLED';
-    }
+    if (normalizedOrder == 'REJECTED') return 'REJECTED';
+    if (normalizedOrder == 'CANCELLED') return 'CANCELLED';
+    if (normalizedOrder == 'DISPUTED') return 'DISPUTED';
+    if (normalizedOrder == 'COMPLETED') return 'COMPLETED';
+    if (normalizedOrder == 'DELIVERED') return 'DELIVERED';
+    if (normalizedOrder == 'IN_TRANSIT' || normalizedDelivery == 'IN_TRANSIT') return 'IN_TRANSIT';
+    if (normalizedOrder == 'DISPATCHED' || normalizedDelivery == 'PICKED_UP') return 'DISPATCHED';
+    if (normalizedDelivery == 'ASSIGNED') return 'DELIVERY_ASSIGNED';
+    if (normalizedOrder == 'PROCESSING') return 'DELIVERY_PROCESSING';
+    if (normalizedPayment == 'HELD' || normalizedPayment == 'ESCROWED' || normalizedOrder == 'CONFIRMED') return 'PAYMENT_HELD';
+    if (normalizedOrder == 'PAYMENT_PENDING' || normalizedOrder == 'ACCEPTED') return 'PAYMENT_PENDING';
+    if (normalizedOrder == 'CREATED') return 'PENDING_ACCEPTANCE';
 
     return normalizedOrder;
+  }
+}
+
+class OrderDelivery {
+  final String id;
+  final String status;
+  final bool pickupOtpVerified;
+  final bool deliveryOtpVerified;
+  final DateTime? pickupTime;
+  final DateTime? deliveryTime;
+  final OrderDeliveryPartner? partner;
+
+  const OrderDelivery({
+    required this.id,
+    required this.status,
+    required this.pickupOtpVerified,
+    required this.deliveryOtpVerified,
+    required this.pickupTime,
+    required this.deliveryTime,
+    required this.partner,
+  });
+
+  factory OrderDelivery.fromJson(Map<String, dynamic> json) {
+    return OrderDelivery(
+      id: (json['id'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      pickupOtpVerified: json['pickupOtpVerified'] == true,
+      deliveryOtpVerified: json['deliveryOtpVerified'] == true,
+      pickupTime: DateTime.tryParse((json['pickupTime'] ?? '').toString()),
+      deliveryTime: DateTime.tryParse((json['deliveryTime'] ?? '').toString()),
+      partner: json['partner'] is Map<String, dynamic>
+          ? OrderDeliveryPartner.fromJson(json['partner'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+class OrderDeliveryPartner {
+  final String id;
+  final String name;
+  final String phone;
+  final String vehicleType;
+  final String vehicleNumber;
+
+  const OrderDeliveryPartner({
+    required this.id,
+    required this.name,
+    required this.phone,
+    required this.vehicleType,
+    required this.vehicleNumber,
+  });
+
+  factory OrderDeliveryPartner.fromJson(Map<String, dynamic> json) {
+    return OrderDeliveryPartner(
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      phone: (json['phone'] ?? '').toString(),
+      vehicleType: (json['vehicleType'] ?? '').toString(),
+      vehicleNumber: (json['vehicleNumber'] ?? '').toString(),
+    );
   }
 }
 

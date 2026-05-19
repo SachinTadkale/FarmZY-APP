@@ -355,7 +355,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return GlassContainer(
       borderRadius: AppRadius.card,
       opacity: 0.05,
-      blur: 20,
+      blur: 0,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,6 +424,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: GlassContainer(
         borderRadius: AppRadius.card,
         opacity: 0.03,
+        blur: 0,
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
@@ -431,6 +432,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               borderRadius: 12,
               padding: const EdgeInsets.all(8),
               opacity: 0.05,
+              blur: 0,
               child: Icon(
                 icon,
                 size: 20,
