@@ -351,8 +351,8 @@ class AuthController extends StateNotifier<AuthState> {
       verificationStatus: localVerificationStatus,
       onboardingCompleted: localOnboardingCompleted,
       isLoggedIn: true,
-      isLoading: true,
-      isInitialized: false,
+      isLoading: false,
+      isInitialized: true,
     );
     _ref.read(selectedRoleProvider.notifier).state = localRole;
 
@@ -367,11 +367,8 @@ class AuthController extends StateNotifier<AuthState> {
       );
     }
 
-    try {
-      await _refreshSessionFromServer();
-    } finally {
-      state = state.copyWith(isLoading: false, isInitialized: true);
-    }
+    // Load fresh session data in the background without blocking the UI boot sequence
+    unawaited(_refreshSessionFromServer());
   }
 
 /**

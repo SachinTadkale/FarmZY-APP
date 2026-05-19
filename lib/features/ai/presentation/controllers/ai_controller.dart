@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:farmzy/features/ai/data/models/ai_chat_session.dart';
 import 'package:farmzy/features/ai/data/models/ai_message.dart';
@@ -43,6 +44,7 @@ class AIChatState {
 
 class AIChatController extends StateNotifier<AIChatState> {
   final AIRepository _repository;
+  StreamSubscription<String>? _subscription;
 
   AIChatController(this._repository) : super(const AIChatState());
 
@@ -84,6 +86,7 @@ class AIChatController extends StateNotifier<AIChatState> {
 
   /// Reset to clean conversation room
   void startNewChat() {
+    stopStreaming();
     state = state.copyWith(
       messages: const [],
       currentSessionId: null,
@@ -105,8 +108,18 @@ class AIChatController extends StateNotifier<AIChatState> {
     }
   }
 
+  /// Stop the active streaming response safely
+  void stopStreaming() {
+    if (_subscription != null) {
+      _subscription!.cancel();
+      _subscription = null;
+    }
+    state = state.copyWith(isStreaming: false);
+  }
+
   /// Submits dynamic badge and resolves context before auto-posting
   Future<void> handleBadgeSelection(AiPromptTemplate badge, String language) async {
+    stopStreaming();
     state = state.copyWith(isStreaming: true);
     try {
       // Create optimistic User query
@@ -131,55 +144,70 @@ class AIChatController extends StateNotifier<AIChatState> {
       );
       state = state.copyWith(messages: [...state.messages, assistantPlaceholder]);
 
-      // Read chunk-by-chunk
+      // Read chunk-by-chunk using push stream listener
       final sseStream = _repository.submitChatPromptStream(
         resolvedPrompt.isNotEmpty ? resolvedPrompt : badge.promptTemplate,
         sessionId: state.currentSessionId,
         language: language,
       );
 
-      await for (final rawData in sseStream) {
-        try {
-          final Map<String, dynamic> data = jsonDecode(rawData);
-          
-          if (data['error'] != null) {
-            _updateLastMessageError(assistantMessageId, data['error'].toString());
-            break;
-          }
+      _subscription = sseStream.listen(
+        (rawData) {
+          try {
+            final Map<String, dynamic> data = jsonDecode(rawData);
+            
+            if (data['error'] != null) {
+              _updateLastMessageError(assistantMessageId, data['error'].toString());
+              stopStreaming();
+              return;
+            }
 
-          if (data['chunk'] != null) {
-            final chunkText = data['chunk'].toString();
-            state = state.copyWith(
-              messages: state.messages.map((msg) {
-                if (msg.id == assistantMessageId) {
-                  return AiMessage(
-                    id: msg.id,
-                    role: msg.role,
-                    message: msg.message + chunkText,
-                    modelUsed: msg.modelUsed,
-                    tokenUsage: msg.tokenUsage,
-                    responseTimeMs: msg.responseTimeMs,
-                    createdAt: msg.createdAt,
-                  );
-                }
-                return msg;
-              }).toList(),
-            );
-          }
+            if (data['chunk'] != null) {
+              final chunkText = data['chunk'].toString();
+              state = state.copyWith(
+                messages: state.messages.map((msg) {
+                  if (msg.id == assistantMessageId) {
+                    return AiMessage(
+                      id: msg.id,
+                      role: msg.role,
+                      message: msg.message + chunkText,
+                      modelUsed: msg.modelUsed,
+                      tokenUsage: msg.tokenUsage,
+                      responseTimeMs: msg.responseTimeMs,
+                      createdAt: msg.createdAt,
+                    );
+                  }
+                  return msg;
+                }).toList(),
+              );
+            }
 
-          if (data['done'] == true) {
-            final finalSessionId = data['sessionId']?.toString();
-            state = state.copyWith(
-              currentSessionId: finalSessionId,
-              isStreaming: false,
-            );
-            loadSessions();
-            break;
+            if (data['done'] == true) {
+              final finalSessionId = data['sessionId']?.toString();
+              state = state.copyWith(
+                currentSessionId: finalSessionId,
+                isStreaming: false,
+              );
+              _subscription?.cancel();
+              _subscription = null;
+              loadSessions();
+            }
+          } catch (jsonErr) {
+            // JSON parsing of partial boundary, safe skip
           }
-        } catch (jsonErr) {
-          // JSON parsing of partial boundary, safe skip
-        }
-      }
+        },
+        onError: (e) {
+          _updateLastMessageError(assistantMessageId, 'Error connecting to streaming server');
+          stopStreaming();
+        },
+        onDone: () {
+          if (state.isStreaming) {
+            state = state.copyWith(isStreaming: false);
+          }
+          _subscription = null;
+        },
+        cancelOnError: true,
+      );
     } catch (e) {
       state = state.copyWith(isStreaming: false);
     }
@@ -187,8 +215,9 @@ class AIChatController extends StateNotifier<AIChatState> {
 
   /// Sends a raw text message via stream
   Future<void> sendMessage(String text, String language) async {
-    if (text.trim().isEmpty || state.isStreaming) return;
+    if (text.trim().isEmpty) return;
     
+    stopStreaming();
     state = state.copyWith(isStreaming: true);
     
     final userMessage = AiMessage(
@@ -215,51 +244,66 @@ class AIChatController extends StateNotifier<AIChatState> {
         language: language,
       );
 
-      await for (final rawData in sseStream) {
-        try {
-          final Map<String, dynamic> data = jsonDecode(rawData);
+      _subscription = sseStream.listen(
+        (rawData) {
+          try {
+            final Map<String, dynamic> data = jsonDecode(rawData);
 
-          if (data['error'] != null) {
-            _updateLastMessageError(assistantMessageId, data['error'].toString());
-            break;
-          }
+            if (data['error'] != null) {
+              _updateLastMessageError(assistantMessageId, data['error'].toString());
+              stopStreaming();
+              return;
+            }
 
-          if (data['chunk'] != null) {
-            final chunkText = data['chunk'].toString();
-            state = state.copyWith(
-              messages: state.messages.map((msg) {
-                if (msg.id == assistantMessageId) {
-                  return AiMessage(
-                    id: msg.id,
-                    role: msg.role,
-                    message: msg.message + chunkText,
-                    modelUsed: msg.modelUsed,
-                    tokenUsage: msg.tokenUsage,
-                    responseTimeMs: msg.responseTimeMs,
-                    createdAt: msg.createdAt,
-                  );
-                }
-                return msg;
-              }).toList(),
-            );
-          }
+            if (data['chunk'] != null) {
+              final chunkText = data['chunk'].toString();
+              state = state.copyWith(
+                messages: state.messages.map((msg) {
+                  if (msg.id == assistantMessageId) {
+                    return AiMessage(
+                      id: msg.id,
+                      role: msg.role,
+                      message: msg.message + chunkText,
+                      modelUsed: msg.modelUsed,
+                      tokenUsage: msg.tokenUsage,
+                      responseTimeMs: msg.responseTimeMs,
+                      createdAt: msg.createdAt,
+                    );
+                  }
+                  return msg;
+                }).toList(),
+              );
+            }
 
-          if (data['done'] == true) {
-            final finalSessionId = data['sessionId']?.toString();
-            state = state.copyWith(
-              currentSessionId: finalSessionId,
-              isStreaming: false,
-            );
-            loadSessions();
-            break;
+            if (data['done'] == true) {
+              final finalSessionId = data['sessionId']?.toString();
+              state = state.copyWith(
+                currentSessionId: finalSessionId,
+                isStreaming: false,
+              );
+              _subscription?.cancel();
+              _subscription = null;
+              loadSessions();
+            }
+          } catch (jsonErr) {
+            // JSON parsing of partial boundary, safe skip
           }
-        } catch (jsonErr) {
-          // JSON parsing of partial boundary, safe skip
-        }
-      }
+        },
+        onError: (e) {
+          _updateLastMessageError(assistantMessageId, 'Error connecting to streaming server');
+          stopStreaming();
+        },
+        onDone: () {
+          if (state.isStreaming) {
+            state = state.copyWith(isStreaming: false);
+          }
+          _subscription = null;
+        },
+        cancelOnError: true,
+      );
     } catch (e) {
       _updateLastMessageError(assistantMessageId, 'Error connecting to streaming server');
-      state = state.copyWith(isStreaming: false);
+      stopStreaming();
     }
   }
 
@@ -278,6 +322,12 @@ class AIChatController extends StateNotifier<AIChatState> {
         return msg;
       }).toList(),
     );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 }
 

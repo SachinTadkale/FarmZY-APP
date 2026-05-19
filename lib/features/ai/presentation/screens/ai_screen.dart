@@ -209,6 +209,9 @@ class _AIScreenState extends ConsumerState<AIScreen> {
             child: _AIInput(
               controller: _controller,
               onSend: _handleSend,
+              onStop: () {
+                ref.read(aiChatControllerProvider.notifier).stopStreaming();
+              },
               isStreaming: state.isStreaming,
             ),
           ),
@@ -261,12 +264,17 @@ class _ChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    message.message,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: isUser ? colors.onSurface : theme.textTheme.bodyLarge?.color,
-                    ),
-                  ),
+                  isUser
+                      ? Text(
+                          message.message,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colors.onSurface,
+                          ),
+                        )
+                      : MarkdownText(
+                          text: message.message,
+                          style: theme.textTheme.bodyLarge,
+                        ),
                   if (!isUser && message.modelUsed != null) ...[
                     const SizedBox(height: 4),
                     const Divider(height: 4, thickness: 0.5, color: Colors.white12),
@@ -330,11 +338,13 @@ class _SuggestionChip extends StatelessWidget {
 class _AIInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
+  final VoidCallback onStop;
   final bool isStreaming;
 
   const _AIInput({
     required this.controller,
     required this.onSend,
+    required this.onStop,
     required this.isStreaming,
   });
 
@@ -353,9 +363,9 @@ class _AIInput extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
-              enabled: !isStreaming,
+              enabled: true,
               decoration: InputDecoration(
-                hintText: isStreaming ? 'AI is thinking...' : 'ai.type_message'.tr().isNotEmpty && 'ai.type_message'.tr() != 'ai.type_message' ? 'ai.type_message'.tr() : 'Ask Saira Ai...',
+                hintText: isStreaming ? 'Saira is typing...' : 'ai.type_message'.tr().isNotEmpty && 'ai.type_message'.tr() != 'ai.type_message' ? 'ai.type_message'.tr() : 'Ask Saira Ai...',
                 hintStyle: TextStyle(
                   color: colors.onSurfaceVariant.withValues(alpha: 0.4),
                   fontWeight: FontWeight.w400,
@@ -365,11 +375,14 @@ class _AIInput extends StatelessWidget {
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
               ),
               style: theme.textTheme.bodyLarge,
-              onSubmitted: (_) => onSend(),
+              onSubmitted: (_) => isStreaming ? null : onSend(),
             ),
           ),
           const SizedBox(width: 8),
-          _SendButton(onTap: onSend, disabled: isStreaming),
+          _SendButton(
+            onTap: isStreaming ? onStop : onSend,
+            isStreaming: isStreaming,
+          ),
         ],
       ),
     );
@@ -378,38 +391,38 @@ class _AIInput extends StatelessWidget {
 
 class _SendButton extends StatelessWidget {
   final VoidCallback onTap;
-  final bool disabled;
-  const _SendButton({required this.onTap, required this.disabled});
+  final bool isStreaming;
+  const _SendButton({required this.onTap, required this.isStreaming});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: disabled ? null : onTap,
+      onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         width: 44,
         height: 44,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: disabled 
-                ? [Colors.grey.shade400, Colors.grey.shade500]
+            colors: isStreaming 
+                ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
                 : const [Color(0xFF10B981), Color(0xFF047857)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(AppRadius.md),
-          boxShadow: disabled ? null : [
+          boxShadow: [
             BoxShadow(
-              color: const Color(0xFF10B981).withValues(alpha: 0.3),
+              color: (isStreaming ? const Color(0xFFEF4444) : const Color(0xFF10B981)).withValues(alpha: 0.3),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Icon(
-          disabled ? Icons.hourglass_bottom_rounded : Icons.send_rounded, 
+          isStreaming ? Icons.stop_rounded : Icons.send_rounded, 
           color: Colors.white, 
-          size: 20,
+          size: 22,
         ),
       ),
     );
@@ -473,6 +486,167 @@ class _Dot extends StatelessWidget {
         color: Theme.of(context).colorScheme.primary,
         shape: BoxShape.circle,
       ),
+    );
+  }
+}
+
+class MarkdownText extends StatelessWidget {
+  final String text;
+  final TextStyle? style;
+
+  const MarkdownText({super.key, required this.text, this.style});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final lines = text.split('\n');
+    final children = <Widget>[];
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final trimmed = line.trim();
+
+      if (trimmed.isEmpty) {
+        if (i < lines.length - 1) {
+          children.add(const SizedBox(height: 6));
+        }
+        continue;
+      }
+
+      if (trimmed.startsWith('###')) {
+        final content = trimmed.substring(3).trim();
+        children.add(Padding(
+          padding: const EdgeInsets.only(top: 6.0, bottom: 3.0),
+          child: Text(
+            content,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontSize: 14,
+            ),
+          ),
+        ));
+        continue;
+      }
+      if (trimmed.startsWith('##')) {
+        final content = trimmed.substring(2).trim();
+        children.add(Padding(
+          padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+          child: Text(
+            content,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontSize: 15,
+            ),
+          ),
+        ));
+        continue;
+      }
+      if (trimmed.startsWith('#')) {
+        final content = trimmed.substring(1).trim();
+        children.add(Padding(
+          padding: const EdgeInsets.only(top: 10.0, bottom: 4.0),
+          child: Text(
+            content,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              fontSize: 16,
+            ),
+          ),
+        ));
+        continue;
+      }
+
+      final isBullet = trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('• ');
+      var cleanText = trimmed;
+      if (isBullet) {
+        cleanText = trimmed.substring(2).trim();
+      }
+
+      final spans = <InlineSpan>[];
+      final parts = cleanText.split(RegExp(r'(\*\*|`)'));
+      var isBold = false;
+      var isCode = false;
+
+      for (final part in parts) {
+        if (part == '**') {
+          isBold = !isBold;
+          continue;
+        }
+        if (part == '`') {
+          isCode = !isCode;
+          continue;
+        }
+
+        if (isBold) {
+          spans.add(TextSpan(
+            text: part,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF10B981),
+            ),
+          ));
+        } else if (isCode) {
+          spans.add(TextSpan(
+            text: part,
+            style: TextStyle(
+              fontFamily: 'Courier',
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              backgroundColor: Colors.white12,
+              color: const Color(0xFFF472B6),
+            ),
+          ));
+        } else {
+          spans.add(TextSpan(
+            text: part,
+            style: style ?? theme.textTheme.bodyMedium?.copyWith(
+              color: colors.onSurface.withValues(alpha: 0.9),
+            ),
+          ));
+        }
+      }
+
+      if (isBullet) {
+        children.add(Padding(
+          padding: const EdgeInsets.only(left: 4.0, bottom: 4.0, top: 2.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '• ',
+                style: TextStyle(
+                  color: colors.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(children: spans),
+                ),
+              ),
+            ],
+          ),
+        ));
+      } else {
+        children.add(Padding(
+          padding: const EdgeInsets.only(bottom: 4.0),
+          child: RichText(
+            text: TextSpan(children: spans),
+          ),
+        ));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: children,
     );
   }
 }

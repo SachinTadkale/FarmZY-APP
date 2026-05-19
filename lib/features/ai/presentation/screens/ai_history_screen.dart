@@ -68,74 +68,120 @@ class AIHistoryScreen extends ConsumerWidget {
                       ),
                       child: const Icon(Icons.delete_sweep_rounded, color: Colors.white, size: 28),
                     ),
-                    child: InkWell(
-                      onTap: () {
-                        ref.read(aiChatControllerProvider.notifier).loadSessionHistory(session.id);
-                        Navigator.of(context).pop();
-                      },
-                      borderRadius: BorderRadius.circular(AppRadius.card),
-                      child: GlassContainer(
-                        borderRadius: AppRadius.card,
-                        opacity: state.currentSessionId == session.id ? 0.15 : 0.06,
-                        color: state.currentSessionId == session.id ? colors.primary : colors.surface,
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: colors.primary.withValues(alpha: 0.1),
-                              ),
-                              child: Icon(Icons.chat_bubble_outline_rounded, color: colors.primary, size: 20),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    session.title ?? 'AI Chat session',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
+                    child: GlassContainer(
+                      borderRadius: AppRadius.card,
+                      opacity: state.currentSessionId == session.id ? 0.15 : 0.06,
+                      color: state.currentSessionId == session.id ? colors.primary : colors.surface,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                ref.read(aiChatControllerProvider.notifier).loadSessionHistory(session.id);
+                                Navigator.of(context).pop();
+                              },
+                              borderRadius: BorderRadius.circular(AppRadius.card),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: colors.primary.withValues(alpha: 0.1),
+                                      ),
+                                      child: Icon(Icons.chat_bubble_outline_rounded, color: colors.primary, size: 20),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    session.lastMessage ?? 'No messages yet',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: colors.onSurface.withValues(alpha: 0.5),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            session.title ?? 'AI Chat session',
+                                            style: theme.textTheme.titleSmall?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            session.lastMessage ?? 'No messages yet',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.bodyMedium?.copyWith(
+                                              color: colors.onSurface.withValues(alpha: 0.5),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Icon(Icons.chevron_right_rounded, color: colors.primary.withValues(alpha: 0.6)),
-                                const SizedBox(height: 6),
-                                Text(
-                                  '${session.totalMessages} msgs',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.onSurface.withValues(alpha: 0.4),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Icon(Icons.chevron_right_rounded, color: colors.primary.withValues(alpha: 0.6)),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          '${session.totalMessages} msgs',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: colors.onSurface.withValues(alpha: 0.4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline_rounded, color: Colors.red.shade400, size: 22),
+                            onPressed: () => _confirmDelete(context, ref, session.id),
+                            tooltip: 'Delete Chat',
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 );
               },
             ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, WidgetRef ref, String sessionId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('Delete Chat?'),
+          content: const Text('Are you sure you want to permanently delete this chat session?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                ref.read(aiChatControllerProvider.notifier).deleteSession(sessionId);
+                Navigator.of(ctx).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Conversation deleted successfully'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

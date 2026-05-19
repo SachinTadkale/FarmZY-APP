@@ -102,6 +102,9 @@ flutter:
     - assets/images/
     - assets/translations/
     - .env
+    - .env.dev
+    - .env.staging
+    - .env.prod
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

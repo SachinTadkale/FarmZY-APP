@@ -35,7 +35,10 @@ class AppConfigNotifier extends StateNotifier<AppConfigState> {
   IO.Socket? _socket;
 
   AppConfigNotifier(this._repository, this._ref)
-      : super(AppConfigState(config: AppConfig.fallback())) {
+      : super(AppConfigState(
+          config: AppConfig.fallback(),
+          isInitialized: true,
+        )) {
     fetchConfig();
     _initSocket();
     // Periodic self-healing fallback TTL (Refinement #10) shortened to 30 seconds
